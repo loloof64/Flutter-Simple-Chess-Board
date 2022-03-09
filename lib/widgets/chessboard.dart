@@ -21,7 +21,7 @@ enum PlayerType {
   computer,
 }
 
-class RichChessboard extends StatelessWidget {
+class SimpleChessBoard extends StatelessWidget {
   final String fen;
   final void Function({required ShortMove move}) onMove;
   final BoardColor orientation;
@@ -30,6 +30,7 @@ class RichChessboard extends StatelessWidget {
   final PlayerType blackPlayerType;
   final Future<PieceType?> Function() onPromote;
   final bool showCoordinatesZone;
+  final bool engineThinking;
 
   bool currentPlayerIsHuman() {
     final whiteTurn = fen.split(' ')[1] == 'w';
@@ -37,7 +38,7 @@ class RichChessboard extends StatelessWidget {
         (blackPlayerType == PlayerType.human && !whiteTurn);
   }
 
-  const RichChessboard({
+  const SimpleChessBoard({
     Key? key,
     required this.fen,
     required this.onMove,
@@ -45,6 +46,7 @@ class RichChessboard extends StatelessWidget {
     required this.whitePlayerType,
     required this.blackPlayerType,
     required this.onPromote,
+    this.engineThinking = false,
     this.showCoordinatesZone = true,
     this.lastMoveToHighlight,
   }) : super(key: key);
@@ -71,6 +73,7 @@ class RichChessboard extends StatelessWidget {
         final size = constraints.maxWidth < constraints.maxHeight
             ? constraints.maxWidth
             : constraints.maxHeight;
+        var boardSizeProportion = (showCoordinatesZone ? 0.9 : 1.0);
         return Stack(
           alignment: Alignment.center,
           children: [
@@ -108,7 +111,7 @@ class RichChessboard extends StatelessWidget {
                 : Container(),
             _Chessboard(
               fen: fen,
-              size: size * (showCoordinatesZone ? 0.9 : 1.0),
+              size: size * boardSizeProportion,
               onMove: _processMove,
               onPromote: onPromote,
               orientation: orientation,
@@ -122,6 +125,15 @@ class RichChessboard extends StatelessWidget {
                       color: lastMoveToHighlight!.color)
               ],
             ),
+            if (engineThinking)
+              SizedBox(
+                width: size * boardSizeProportion,
+                height: size * boardSizeProportion,
+                child: const CircularProgressIndicator(
+                  backgroundColor: Colors.teal,
+                  strokeWidth: 8,
+                ),
+              )
           ],
         );
       }),

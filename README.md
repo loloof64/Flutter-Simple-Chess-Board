@@ -15,7 +15,15 @@ A simple chess board widget, with several options.
 
 ## Features
 
-TODO: List what your package can do. Maybe include images, gifs, or videos.
+![Example screenshot](./simple_chess_board.jpg "Example usage")
+
+A simple chess board, where:
+* you can configure the current position,
+* you can configure each side type (e.g : we can drag pieces for white side, but block them for black side if we want to make an external engine move),
+* you can show coordinates and player turn around the board,
+* you use your own widget for processing with promotion piece selection,
+* you can choose the orientation of the board (are Blacks at bottom ?),
+* you can add arrows.
 
 ## Getting started
 

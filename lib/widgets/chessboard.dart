@@ -23,13 +23,13 @@ enum PlayerType {
 
 class SimpleChessBoard extends StatelessWidget {
   final String fen;
-  final void Function({required ShortMove move}) onMove;
   final BoardColor orientation;
-  final BoardArrow? lastMoveToHighlight;
   final PlayerType whitePlayerType;
   final PlayerType blackPlayerType;
+  final void Function({required ShortMove move}) onMove;
   final Future<PieceType?> Function() onPromote;
   final bool showCoordinatesZone;
+  final BoardArrow? lastMoveToHighlight;
   final bool engineThinking;
 
   bool currentPlayerIsHuman() {
@@ -41,10 +41,10 @@ class SimpleChessBoard extends StatelessWidget {
   const SimpleChessBoard({
     Key? key,
     required this.fen,
-    required this.onMove,
     required this.orientation,
     required this.whitePlayerType,
     required this.blackPlayerType,
+    required this.onMove,
     required this.onPromote,
     this.engineThinking = false,
     this.showCoordinatesZone = true,

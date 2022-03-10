@@ -21,9 +21,11 @@ A simple chess board, where:
 * you can configure the current position,
 * you can configure each side type (e.g : we can drag pieces for white side, but block them for black side if we want to make an external engine move),
 * you can show coordinates and player turn around the board,
-* you use your own widget for processing with promotion piece selection,
+* you define your own widget for processing with promotion piece selection,
 * you can choose the orientation of the board (are Blacks at bottom ?),
 * you can add arrows.
+
+If you want to implement game logic, you can use the [chess](https://pub.dev/packages/chess) package.
 
 ## Getting started
 
@@ -35,9 +37,76 @@ start using the package.
 TODO: Include short and useful examples for package users. Add longer examples
 to `/example` folder. 
 
+### Simple example
+
 ```dart
-const like = 'sample';
+SimpleChessBoard(
+    engineThinking: false,
+    fen: '8/8/8/4p1K1/2k1P3/8/8/8 b - - 0 1',
+    onMove: ({required ShortMove move}){
+        print('${move.from}|${move.to}|${move.promotion}')
+    },
+    orientation: BoardColor.black,
+    whitePlayerType: PlayerType.human,
+    blackPlayerType: PlayerType.computer,
+    lastMoveToHighlight: BoardArrow(from: 'e2', to: 'e4', color: Colors.blueAccent),
+    onPromote: () => PieceType.queen,
+),
 ```
+
+### Handling promotion
+
+You handle promotion in the function you give to the mandatory `onPromote` parameter. In this function you return the `PieceType` you want to use.
+
+As an example:
+
+```dart
+SimpleChessBoard(
+    engineThinking: false,
+    fen: '1k6/p2KP3/1p6/8/4B3/8/8/8 w - - 0 1',
+    onMove: ({required ShortMove move}){
+        print('${move.from}|${move.to}|${move.promotion}')
+    },
+    orientation: BoardColor.white,
+    whitePlayerType: PlayerType.human,
+    blackPlayerType: PlayerType.computer,
+    lastMoveToHighlight: BoardArrow(from: 'e2', to: 'e4', color: Colors.blueAccent),
+        onPromote: () {
+            return showDialog<PieceType>(
+            context: context,
+            builder: (_) {
+                return AlertDialog(
+                title: Text('Promotion'),
+                content: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                            ListTile(
+                                title: Text("Queen"),
+                                onTap: () => navigator.pop(PieceType.queen),
+                            ),
+                            ListTile(
+                                title: Text("Rook"),
+                                onTap: () => navigator.pop(PieceType.rook),
+                            ),
+                            ListTile(
+                                title: Text("Bishop"),
+                                onTap: () => navigator.pop(PieceType.bishop),
+                            ),
+                            ListTile(
+                                title: Text("Knight"),
+                                onTap: () => navigator.pop(PieceType.knight),
+                            ),
+                        ],
+                    ),
+                );
+            },
+        );
+    },
+)
+```
+
+### Parameters
+
 
 ## Additional information
 

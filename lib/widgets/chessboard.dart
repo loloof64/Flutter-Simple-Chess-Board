@@ -22,14 +22,31 @@ enum PlayerType {
 }
 
 class SimpleChessBoard extends StatelessWidget {
+  /// Board's position in Forsyth-Edwards Notation.
   final String fen;
+
+  /// Is Black side at bottom of the board, or white side ?
   final BoardColor orientation;
+
+  /// White type (human/cpu).
   final PlayerType whitePlayerType;
+
+  /// Black type (human/cpu).
   final PlayerType blackPlayerType;
+
+  /// Handler for when user tries to make move on board.
   final void Function({required ShortMove move}) onMove;
+
+  /// Handler for when user wants to make a promotion on board.
   final Future<PieceType?> Function() onPromote;
+
+  /// Does the border with coordinates and player turn must be visible ?
   final bool showCoordinatesZone;
+
+  /// Last move arrow.
   final BoardArrow? lastMoveToHighlight;
+
+  /// Must a circular progress bar be visible above of the board ?
   final bool engineThinking;
 
   bool currentPlayerIsHuman() {

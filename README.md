@@ -29,8 +29,7 @@ If you want to implement game logic, you can use the [chess](https://pub.dev/pac
 
 ## Getting started
 
-TODO: List prerequisites and provide or point to information on how to
-start using the package.
+To use SimpleChessBoard widget, add [simple_chess_board](https://pub.dev/packages/simple_chess_board/install) as a dependency in your pubspec.yaml .
 
 ## Usage
 

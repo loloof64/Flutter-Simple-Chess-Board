@@ -116,7 +116,7 @@ SimpleChessBoard(
 * lastMoveToHighlight (optionnal) : give data about the arrow to draw on the board, if any. You pass a `BoardArrow` with from/to cells `String` and color `Color` (such as `BoardArrow(from: 'e2', to: 'e4', color: Colors.blueAccent)`) if you want to draw an arrow, or `null` if you don't want any arrow on the board.
 * engineThinking (optionnal) : says if you want to show a `CircularProgressBar` in order to indicate that an engine is trying to compute next move for example.
 
-## Additional information
+## Project's repository
 
 You can find the repository on [Github](https://github.com/loloof64/Flutter-Simple-Chess-Board).
 

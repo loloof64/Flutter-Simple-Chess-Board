@@ -15,7 +15,7 @@ A simple chess board widget, with several options.
 
 ## Features
 
-![Example screenshot](./simple_chess_board.jpg "Example usage")
+<img src="https://github.com/loloof64/Flutter-Simple-Chess-Board/blob/main/simple_chess_board.jpg" alt="Example usage" width="400"/>
 
 A simple chess board, where:
 * you can configure the current position,

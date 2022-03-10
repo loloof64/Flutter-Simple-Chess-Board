@@ -1,5 +1,6 @@
-name: chess_exercises_organizer
-description: Load your chess exercises and train yourself against the device.
+name: simple_chess_board_usage
+description: A simple demo about usage of Simple Chess Board.
+author: Laurent Bernabe
 
 # The following line prevents the package from being accidentally published to
 # pub.dev using `flutter pub publish`. This is preferred for private packages.

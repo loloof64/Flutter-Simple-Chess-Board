@@ -1,6 +1,6 @@
 name: simple_chess_board
 description: A simple chess board widget, with several options.
-version: 0.0.1
+version: 0.0.2
 repository: https://github.com/loloof64/Flutter-Simple-Chess-Board
 
 environment:

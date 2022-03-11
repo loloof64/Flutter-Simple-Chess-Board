@@ -23,7 +23,8 @@ A simple chess board, where:
 * you can show coordinates and player turn around the board,
 * you define your own widget for processing with promotion piece selection,
 * you can choose the orientation of the board (are Blacks at bottom ?),
-* you can add arrows.
+* you can add arrows,
+* the common size will be the least of attributed width/height : if width > height => takes the allocated height, and the reverse if width < height (so for example, if you use it in a Row/Column, you can set the stretch alignment in the cross axis direction for a quite good layout/effect).
 
 If you want to implement game logic, you can use the [chess](https://pub.dev/packages/chess) package.
 

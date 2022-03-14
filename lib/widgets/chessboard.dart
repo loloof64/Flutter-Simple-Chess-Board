@@ -162,6 +162,7 @@ class SimpleChessBoard extends StatelessWidget {
               SizedBox(
                 width: size,
                 height: size,
+                child: const Text(''),
               ),
           ],
         );

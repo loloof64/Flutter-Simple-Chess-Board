@@ -1,3 +1,7 @@
+## 0.1.0
+
+* Preventing user from dragging pieces when it is not human turn.
+
 ## 0.0.3
 
 * Added a note on the board's size computation in the README.

@@ -16,11 +16,13 @@ import '../models/square.dart';
 import '../utils.dart';
 import '../widgets/ui_square.dart';
 
+/// Player type (human/computer)
 enum PlayerType {
   human,
   computer,
 }
 
+/// Simple chess board widget.
 class SimpleChessBoard extends StatelessWidget {
   /// Board's position in Forsyth-Edwards Notation.
   final String fen;
@@ -55,6 +57,7 @@ class SimpleChessBoard extends StatelessWidget {
         (blackPlayerType == PlayerType.human && !whiteTurn);
   }
 
+  /// Constructor.
   const SimpleChessBoard({
     Key? key,
     required this.fen,
@@ -90,6 +93,10 @@ class SimpleChessBoard extends StatelessWidget {
         final size = constraints.maxWidth < constraints.maxHeight
             ? constraints.maxWidth
             : constraints.maxHeight;
+        final isWhiteTurn = fen.split(' ')[1] == 'w';
+        final humanTurn =
+            (isWhiteTurn && whitePlayerType == PlayerType.human) ||
+                (!isWhiteTurn && blackPlayerType == PlayerType.human);
         var boardSizeProportion = (showCoordinatesZone ? 0.9 : 1.0);
         return Stack(
           alignment: Alignment.center,
@@ -150,7 +157,12 @@ class SimpleChessBoard extends StatelessWidget {
                   backgroundColor: Colors.teal,
                   strokeWidth: 8,
                 ),
-              )
+              ),
+            if (!humanTurn)
+              SizedBox(
+                width: size,
+                height: size,
+              ),
           ],
         );
       }),

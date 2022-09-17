@@ -1,3 +1,7 @@
+## 0.3.0
+
+* Updated dependencies and improved formatting.
+
 ## 0.2.0
 
 * Previous version did not blocked user from moving pieces on engine turn.

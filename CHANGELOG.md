@@ -1,3 +1,7 @@
+## 0.3.2
+
+* Updated dependencies.
+
 ## 0.3.0
 
 * Updated dependencies and improved formatting.

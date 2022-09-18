@@ -1,3 +1,7 @@
+## 0.3.6
+
+* Improving preview image on documentation.
+
 ## 0.3.4
 
 * Preview image is a Png instead of a jpeg.

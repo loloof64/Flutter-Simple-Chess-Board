@@ -1,3 +1,7 @@
+## 0.3.4
+
+* Preview image is a Png instead of a jpeg.
+
 ## 0.3.2
 
 * Updated dependencies.

@@ -1,3 +1,7 @@
+## 0.3.8
+
+* Using latest version of chess package.
+
 ## 0.3.6
 
 * Improving preview image on documentation.

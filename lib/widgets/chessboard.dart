@@ -382,8 +382,7 @@ class _ChessboardState extends State<_Chessboard> {
 }
 
 /*
-Adapted from https://github.com/deven98/flutter_chess_board/blob/97fe52c9a0c706b455b2162df55b050eb92ff70e/lib/src/chess_board.dart
-*/
+Adapted from https://www.codeproject.com/Questions/125049/Draw-an-arrow-with-big-cap */
 const files = ['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h'];
 
 class _ArrowPainter extends CustomPainter {
@@ -394,16 +393,16 @@ class _ArrowPainter extends CustomPainter {
 
   @override
   void paint(Canvas canvas, Size size) {
-    final blockSize = size.width * 0.125;
-    final halfBlockSize = blockSize * 0.37;
+    final blockSize = size.width / 8;
+    final halfBlockSize = blockSize / 2;
 
-    const baseArrowLengthProportion = 0.85;
+    const arrowMultiplier = 6;
 
     for (var arrow in arrows) {
-      var startFile = files.indexOf(arrow.from[0]);
-      var startRank = int.parse(arrow.from[1]) - 1;
-      var endFile = files.indexOf(arrow.to[0]);
-      var endRank = int.parse(arrow.to[1]) - 1;
+      final startFile = files.indexOf(arrow.from[0]);
+      final startRank = int.parse(arrow.from[1]) - 1;
+      final endFile = files.indexOf(arrow.to[0]);
+      final endRank = int.parse(arrow.to[1]) - 1;
 
       int effectiveRowStart = 0;
       int effectiveColumnStart = 0;
@@ -422,60 +421,100 @@ class _ArrowPainter extends CustomPainter {
         effectiveRowEnd = 7 - endRank;
       }
 
-      var startOffset = Offset(
+      final startOffset = Offset(
           ((effectiveColumnStart + 1) * blockSize) - halfBlockSize,
           ((effectiveRowStart + 1) * blockSize) - halfBlockSize);
-      var endOffset = Offset(
+      final endOffset = Offset(
           ((effectiveColumnEnd + 1) * blockSize) - halfBlockSize,
           ((effectiveRowEnd + 1) * blockSize) - halfBlockSize);
 
-      var yDist = baseArrowLengthProportion * (endOffset.dy - startOffset.dy);
-      var xDist = baseArrowLengthProportion * (endOffset.dx - startOffset.dx);
+      final yDist = endOffset.dy - startOffset.dy;
+      final xDist = endOffset.dx - startOffset.dx;
 
-      var paint = Paint()
-        ..strokeWidth = halfBlockSize * baseArrowLengthProportion
+      final paint = Paint()
+        ..strokeWidth = halfBlockSize * 0.150
         ..color = arrow.color;
 
       canvas.drawLine(startOffset,
           Offset(startOffset.dx + xDist, startOffset.dy + yDist), paint);
 
-      var slope =
-          (endOffset.dy - startOffset.dy) / (endOffset.dx - startOffset.dx);
+      var arrowPoint = endOffset;
+      double arrowLength = sqrt(
+        pow((startOffset.dx - endOffset.dx).abs(), 2) +
+            pow((startOffset.dy - endOffset.dy).abs(), 2),
+      );
+      double arrowAngle = atan2(
+        (startOffset.dy - endOffset.dy).abs(),
+        (startOffset.dx - endOffset.dx).abs(),
+      );
 
-      var newLineSlope = -1 / slope;
+      double pointX, pointY;
+      if (startOffset.dx > endOffset.dx) {
+        pointX = startOffset.dx -
+            (cos(arrowAngle) * (arrowLength - (3 * arrowMultiplier)));
+      } else {
+        pointX = cos(arrowAngle) * (arrowLength - (3 * arrowMultiplier)) +
+            startOffset.dx;
+      }
 
-      var points = _getNewPoints(
-          Offset(startOffset.dx + xDist, startOffset.dy + yDist),
-          newLineSlope,
-          halfBlockSize);
-      var newPoint1 = points[0];
-      var newPoint2 = points[1];
+      if (startOffset.dy > endOffset.dy) {
+        pointY = startOffset.dy -
+            (sin(arrowAngle) * (arrowLength - (3 * arrowMultiplier)));
+      } else {
+        pointY = (sin(arrowAngle) * (arrowLength - (3 * arrowMultiplier))) +
+            startOffset.dy;
+      }
 
-      var path = Path();
+      Offset arrowPointBack = Offset(pointX, pointY);
 
-      path.moveTo(endOffset.dx, endOffset.dy);
-      path.lineTo(newPoint1.dx, newPoint1.dy);
-      path.lineTo(newPoint2.dx, newPoint2.dy);
-      path.close();
+      double angleB =
+          atan2((3 * arrowMultiplier), (arrowLength - (3 * arrowMultiplier)));
 
-      canvas.drawPath(path, paint);
+      double angleC =
+          pi * (90 - (arrowAngle * (180 / pi)) - (angleB * (180 / pi))) / 180;
+
+      double secondaryLength = (3 * arrowMultiplier) / sin(angleB);
+
+      if (startOffset.dx > endOffset.dx) {
+        pointX = startOffset.dx - (sin(angleC) * secondaryLength);
+      } else {
+        pointX = (sin(angleC) * secondaryLength) + startOffset.dx;
+      }
+
+      if (startOffset.dy > endOffset.dy) {
+        pointY = startOffset.dy - (cos(angleC) * secondaryLength);
+      } else {
+        pointY = (cos(angleC) * secondaryLength) + startOffset.dy;
+      }
+
+      Offset arrowPointLeft = Offset(pointX, pointY);
+      angleC = arrowAngle - angleB;
+
+      if (startOffset.dx > endOffset.dx) {
+        pointX = startOffset.dx - (cos(angleC) * secondaryLength);
+      } else {
+        pointX = (cos(angleC) * secondaryLength) + startOffset.dx;
+      }
+
+      if (startOffset.dy > endOffset.dy) {
+        pointY = startOffset.dy - (sin(angleC) * secondaryLength);
+      } else {
+        pointY = (sin(angleC) * secondaryLength) + startOffset.dy;
+      }
+
+      Offset arrowPointRight = Offset(pointX, pointY);
+
+      Path path = Path();
+      path.moveTo(arrowPoint.dx, arrowPoint.dy);
+      path.lineTo(arrowPointLeft.dx, arrowPointLeft.dy);
+      path.lineTo(arrowPointBack.dx, arrowPointBack.dy);
+      path.lineTo(arrowPointRight.dx, arrowPointRight.dy);
+
+      canvas.drawPath(
+        path,
+        paint..style = PaintingStyle.fill,
+      );
     }
-  }
-
-  List<Offset> _getNewPoints(Offset start, double slope, double length) {
-    if (slope == double.infinity || slope == double.negativeInfinity) {
-      return [
-        Offset(start.dx, start.dy + length),
-        Offset(start.dx, start.dy - length)
-      ];
-    }
-
-    return [
-      Offset(start.dx + (length / sqrt(1 + (slope * slope))),
-          start.dy + ((length * slope) / sqrt(1 + (slope * slope)))),
-      Offset(start.dx - (length / sqrt(1 + (slope * slope))),
-          start.dy - ((length * slope) / sqrt(1 + (slope * slope)))),
-    ];
   }
 
   @override

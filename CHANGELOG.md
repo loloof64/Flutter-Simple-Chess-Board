@@ -1,3 +1,7 @@
+## 0.6.0
+
+* Improved style of arrows.
+
 ## 0.5.0
 
 * Reducing thickness of arrows.

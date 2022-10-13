@@ -31,12 +31,12 @@ class UIPiece extends StatelessWidget {
 
     return Draggable<HalfMove>(
       data: HalfMove(squareName, Option.of(piece)),
-      child: pieceWidget,
       feedback: pieceWidget,
       childWhenDragging: UITile(
         color: squareColor,
         size: size,
       ),
+      child: pieceWidget,
     );
   }
 

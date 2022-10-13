@@ -80,9 +80,9 @@ class SimpleChessBoard extends StatelessWidget {
   Widget _buildPlayerTurn({required double size}) {
     final isWhiteTurn = fen.split(' ')[1] == 'w';
     return Positioned(
-      child: _PlayerTurn(size: size * 0.05, whiteTurn: isWhiteTurn),
       bottom: size * 0.001,
       right: size * 0.001,
+      child: _PlayerTurn(size: size * 0.05, whiteTurn: isWhiteTurn),
     );
   }
 
@@ -316,9 +316,9 @@ class _ChessboardState extends State<_Chessboard> {
                   child: AspectRatio(
                     aspectRatio: 1.0,
                     child: CustomPaint(
-                      child: Container(),
                       painter: _ArrowPainter(
                           widget.board.arrows, widget.board.orientation),
+                      child: Container(),
                     ),
                   ),
                 ),
@@ -394,10 +394,10 @@ class _ArrowPainter extends CustomPainter {
 
   @override
   void paint(Canvas canvas, Size size) {
-    var blockSize = size.width / 8;
-    var halfBlockSize = size.width / 16;
+    final blockSize = size.width * 0.125;
+    final halfBlockSize = blockSize * 0.37;
 
-    const baseArrowLengthProportion = 0.6;
+    const baseArrowLengthProportion = 0.85;
 
     for (var arrow in arrows) {
       var startFile = files.indexOf(arrow.from[0]);

@@ -1,6 +1,14 @@
-## 0.3.8
+## 0.5.0
 
-* Using latest version of chess package.
+* Reducing thickness of arrows.
+
+## 0.4.2
+
+* Using latest chess package version.
+
+## 0.4.0
+
+* Reducing thickness of arrows.
 
 ## 0.3.6
 

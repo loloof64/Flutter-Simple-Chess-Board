@@ -395,8 +395,7 @@ class _ArrowPainter extends CustomPainter {
   void paint(Canvas canvas, Size size) {
     final blockSize = size.width / 8;
     final halfBlockSize = blockSize / 2;
-
-    const arrowMultiplier = 6;
+    final arrowMultiplier = blockSize * 0.1;
 
     for (var arrow in arrows) {
       final startFile = files.indexOf(arrow.from[0]);

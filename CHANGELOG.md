@@ -1,3 +1,7 @@
+## 0.6.2
+
+* Head of arrow is resized on the basis of the arrow length.
+
 ## 0.6.0
 
 * Improved style of arrows.

@@ -34,7 +34,9 @@ To use SimpleChessBoard widget, add [simple_chess_board](https://pub.dev/package
 
 ## Usage
 
-You can find a longer example in the `example` folder. 
+You can find a longer example in the `example` folder.
+
+There's also a live example on [Zap](https://zapp.run/edit/simple-chess-boad-z62a06g862b0?file=lib/main.dart).
 
 ### Simple example
 

@@ -16,6 +16,34 @@ import '../models/square.dart';
 import '../utils.dart';
 import '../widgets/ui_square.dart';
 
+/// Colors used by the chess board.
+class ChessBoardColors {
+  /// The color of the light squares.
+  Color lightSquaresColor = const Color.fromRGBO(240, 217, 181, 1);
+
+  /// The color of the dark squares.
+  Color darkSquaresColor = const Color.fromRGBO(181, 136, 99, 1);
+
+  /// The color of the coordinates zone.
+  Color coordinatesZoneColor = Colors.indigo.shade300;
+
+  /// The color of last move arrow.
+  Color lastMoveArrowColor = Colors.greenAccent;
+
+  /// The color of current selected square (for moving a piece with clicks
+  /// avoiding drag and drop).
+  Color selectionHighlightColor = Colors.greenAccent;
+
+  /// The color of the circular progress bar.
+  Color circularProgressBarColor = Colors.teal;
+
+  /// The color of the coordinates.
+  Color coordinatesColor = Colors.yellow.shade400;
+
+  /// Constructor.
+  ChessBoardColors();
+}
+
 /// Player type (human/computer)
 enum PlayerType {
   human,
@@ -51,11 +79,15 @@ class SimpleChessBoard extends StatelessWidget {
   /// Must a circular progress bar be visible above of the board ?
   final bool engineThinking;
 
+  /// Says if the player in turn is human.
   bool currentPlayerIsHuman() {
     final whiteTurn = fen.split(' ')[1] == 'w';
     return (whitePlayerType == PlayerType.human && whiteTurn) ||
         (blackPlayerType == PlayerType.human && !whiteTurn);
   }
+
+  /// Colors used by the chess board.
+  final ChessBoardColors chessBoardColors;
 
   /// Constructor.
   const SimpleChessBoard({
@@ -66,6 +98,7 @@ class SimpleChessBoard extends StatelessWidget {
     required this.blackPlayerType,
     required this.onMove,
     required this.onPromote,
+    required this.chessBoardColors,
     this.engineThinking = false,
     this.showCoordinatesZone = true,
     this.lastMoveToHighlight,
@@ -103,7 +136,7 @@ class SimpleChessBoard extends StatelessWidget {
           children: [
             showCoordinatesZone
                 ? Container(
-                    color: Colors.indigo.shade300,
+                    color: chessBoardColors.coordinatesZoneColor,
                     width: size,
                     height: size,
                     child: Stack(
@@ -112,21 +145,25 @@ class SimpleChessBoard extends StatelessWidget {
                           boardSize: size,
                           top: true,
                           reversed: orientation == BoardColor.black,
+                          coordinatesColor: chessBoardColors.coordinatesColor,
                         ),
                         ...getFilesCoordinates(
                           boardSize: size,
                           top: false,
                           reversed: orientation == BoardColor.black,
+                          coordinatesColor: chessBoardColors.coordinatesColor,
                         ),
                         ...getRanksCoordinates(
                           boardSize: size,
                           left: true,
                           reversed: orientation == BoardColor.black,
+                          coordinatesColor: chessBoardColors.coordinatesColor,
                         ),
                         ...getRanksCoordinates(
                           boardSize: size,
                           left: false,
                           reversed: orientation == BoardColor.black,
+                          coordinatesColor: chessBoardColors.coordinatesColor,
                         ),
                         _buildPlayerTurn(size: size),
                       ],
@@ -139,22 +176,23 @@ class SimpleChessBoard extends StatelessWidget {
               onMove: _processMove,
               onPromote: onPromote,
               orientation: orientation,
-              lastMoveHighlightColor: Colors.indigoAccent.shade200,
-              selectionHighlightColor: Colors.greenAccent,
+              lastMoveHighlightColor: chessBoardColors.lastMoveArrowColor,
+              selectionHighlightColor: chessBoardColors.selectionHighlightColor,
+              boardColors: chessBoardColors,
               arrows: <BoardArrow>[
                 if (lastMoveToHighlight != null)
                   BoardArrow(
-                      from: lastMoveToHighlight!.from,
-                      to: lastMoveToHighlight!.to,
-                      color: lastMoveToHighlight!.color)
+                    from: lastMoveToHighlight!.from,
+                    to: lastMoveToHighlight!.to,
+                  )
               ],
             ),
             if (engineThinking)
               SizedBox(
                 width: size * boardSizeProportion,
                 height: size * boardSizeProportion,
-                child: const CircularProgressIndicator(
-                  backgroundColor: Colors.teal,
+                child: CircularProgressIndicator(
+                  backgroundColor: chessBoardColors.circularProgressBarColor,
                   strokeWidth: 8,
                 ),
               ),
@@ -202,9 +240,10 @@ Iterable<Widget> getFilesCoordinates({
   required double boardSize,
   required bool top,
   required bool reversed,
+  required Color coordinatesColor,
 }) {
   final commonTextStyle = TextStyle(
-    color: Colors.yellow.shade400,
+    color: coordinatesColor,
     fontWeight: FontWeight.bold,
     fontSize: boardSize * 0.04,
   );
@@ -229,9 +268,10 @@ Iterable<Widget> getRanksCoordinates({
   required double boardSize,
   required bool left,
   required bool reversed,
+  required Color coordinatesColor,
 }) {
   final commonTextStyle = TextStyle(
-    color: Colors.yellow.shade400,
+    color: coordinatesColor,
     fontWeight: FontWeight.bold,
     fontSize: boardSize * 0.04,
   );
@@ -256,9 +296,8 @@ class _Chessboard extends StatefulWidget {
   _Chessboard({
     required String fen,
     required double size,
+    required ChessBoardColors boardColors,
     BoardColor orientation = BoardColor.white,
-    Color lightSquareColor = const Color.fromRGBO(240, 217, 181, 1),
-    Color darkSquareColor = const Color.fromRGBO(181, 136, 99, 1),
     Moved onMove = noop1,
     Promoted onPromote = defaultPromoting,
     BuildPiece? buildPiece,
@@ -271,17 +310,16 @@ class _Chessboard extends StatefulWidget {
   }) : board = Board(
           fen: fen,
           size: size,
+          boardColors: boardColors,
           orientation: orientation,
           onMove: onMove,
-          lightSquareColor: lightSquareColor,
-          darkSquareColor: darkSquareColor,
+          lightSquareColor: boardColors.lightSquaresColor,
+          darkSquareColor: boardColors.darkSquaresColor,
           onPromote: onPromote,
           buildPiece: buildPiece,
           buildSquare: buildSquare,
           buildCustomPiece: buildCustomPiece,
           lastMove: lastMove,
-          lastMoveHighlightColor: lastMoveHighlightColor,
-          selectionHighlightColor: selectionHighlightColor,
           arrows: arrows,
         );
 
@@ -317,7 +355,10 @@ class _ChessboardState extends State<_Chessboard> {
                     aspectRatio: 1.0,
                     child: CustomPaint(
                       painter: _ArrowPainter(
-                          widget.board.arrows, widget.board.orientation),
+                        widget.board.arrows,
+                        widget.board.orientation,
+                        widget.board.boardColors.lastMoveArrowColor,
+                      ),
                       child: Container(),
                     ),
                   ),
@@ -330,9 +371,9 @@ class _ChessboardState extends State<_Chessboard> {
   Color? _getHighlight(Square square) {
     return clickMove
         .filter((t) => t.square == square.name)
-        .map((_) => widget.board.selectionHighlightColor)
+        .map((_) => widget.board.boardColors.selectionHighlightColor)
         .alt(() => Option.fromPredicate(
-              widget.board.lastMoveHighlightColor,
+              widget.board.boardColors.lastMoveArrowColor,
               (_) => widget.board.lastMove.contains(square.name),
             ))
         .toNullable();
@@ -388,8 +429,9 @@ const files = ['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h'];
 class _ArrowPainter extends CustomPainter {
   List<BoardArrow> arrows;
   BoardColor orientation;
+  Color arrowsColor;
 
-  _ArrowPainter(this.arrows, this.orientation);
+  _ArrowPainter(this.arrows, this.orientation, this.arrowsColor);
 
   @override
   void paint(Canvas canvas, Size size) {
@@ -432,7 +474,7 @@ class _ArrowPainter extends CustomPainter {
 
       final paint = Paint()
         ..strokeWidth = halfBlockSize * 0.150
-        ..color = arrow.color;
+        ..color = arrowsColor;
 
       canvas.drawLine(startOffset,
           Offset(startOffset.dx + xDist, startOffset.dy + yDist), paint);

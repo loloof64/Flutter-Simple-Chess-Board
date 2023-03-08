@@ -35,6 +35,20 @@ class _MyHomePageState extends State<MyHomePage> {
   final _chess = chesslib.Chess.fromFEN(chesslib.Chess.DEFAULT_POSITION);
   var _blackAtBottom = false;
   BoardArrow? _lastMoveArrowCoordinates;
+  late ChessBoardColors _boardColors;
+
+  @override
+  void initState() {
+    _boardColors = ChessBoardColors()
+      ..lightSquaresColor = Colors.blue.shade200
+      ..darkSquaresColor = Colors.blue.shade600
+      ..coordinatesZoneColor = Colors.redAccent.shade200
+      ..lastMoveArrowColor = Colors.cyan
+      ..selectionHighlightColor = Colors.orange
+      ..circularProgressBarColor = Colors.red
+      ..coordinatesColor = Colors.green;
+    super.initState();
+  }
 
   void tryMakingMove({required ShortMove move}) {
     final success = _chess.move(<String, String?>{
@@ -47,8 +61,7 @@ class _MyHomePageState extends State<MyHomePage> {
     });
     if (success) {
       setState(() {
-        _lastMoveArrowCoordinates =
-            BoardArrow(from: move.from, to: move.to, color: Colors.greenAccent);
+        _lastMoveArrowCoordinates = BoardArrow(from: move.from, to: move.to);
       });
     }
   }
@@ -107,6 +120,7 @@ class _MyHomePageState extends State<MyHomePage> {
       ),
       body: Center(
         child: SimpleChessBoard(
+          chessBoardColors: _boardColors,
           engineThinking: false,
           fen: _chess.fen,
           onMove: tryMakingMove,

@@ -1,3 +1,7 @@
+## 0.7.0
+
+* We can change colors.
+
 ## 0.6.2
 
 * Head of arrow is resized on the basis of the arrow length.

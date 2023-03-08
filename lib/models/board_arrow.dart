@@ -1,7 +1,5 @@
 // Inspired by https://github.com/deven98/flutter_chess_board/blob/97fe52c9a0c706b455b2162df55b050eb92ff70e/lib/src/board_arrow.dart
 
-import 'package:flutter/material.dart';
-
 /// An arrow for the last move done on board.
 class BoardArrow {
   /// From square (e.g 'd2').
@@ -10,9 +8,6 @@ class BoardArrow {
   /// To square (e.g 'd4').
   final String to;
 
-  /// Color of the arrow from flutter material package (e.g Colors.green).
-  final Color color;
-
   /// Constructor.
   /// from : from square (e.g 'd2').
   /// to : to square (e.g 'd4').
@@ -20,7 +15,6 @@ class BoardArrow {
   BoardArrow({
     required this.from,
     required this.to,
-    required this.color,
   });
 
   /// Equality operator.

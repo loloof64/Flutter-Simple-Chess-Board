@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import '../models/board_arrow.dart';
 import '../models/piece.dart';
 import '../utils.dart' as utils;
+import '../widgets/chessboard.dart' show ChessBoardColors;
 import 'package:fpdart/fpdart.dart';
 
 import 'board_color.dart';
@@ -26,10 +27,9 @@ class Board {
   final Option<BuildPiece> buildPiece;
   final Option<BuildSquare> buildSquare;
   final Option<BuildCustomPiece> buildCustomPiece;
-  final Color selectionHighlightColor;
-  final Color lastMoveHighlightColor;
   final List<String> lastMove;
   final List<BoardArrow> arrows;
+  final ChessBoardColors boardColors;
 
   Board({
     required this.fen,
@@ -37,13 +37,12 @@ class Board {
     required this.orientation,
     required this.lightSquareColor,
     required this.darkSquareColor,
+    required this.boardColors,
     required Moved onMove,
     required Promoted onPromote,
     BuildPiece? buildPiece,
     BuildSquare? buildSquare,
     BuildCustomPiece? buildCustomPiece,
-    required this.selectionHighlightColor,
-    required this.lastMoveHighlightColor,
     required this.lastMove,
     required this.arrows,
   })  : _onMove = onMove,

@@ -1,3 +1,7 @@
+## 0.9.0
+
+* The callback onPromotionCommited is now effective.
+
 ## 0.8.0
 
 * We must add a new callback to the ChessBoard : onPromotionCommited.

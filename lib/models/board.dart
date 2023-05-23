@@ -15,6 +15,7 @@ typedef Moved = void Function(ShortMove move);
 typedef BuildPiece = Widget? Function(Piece piece, double size);
 typedef BuildSquare = Widget? Function(BoardColor color, double size);
 typedef BuildCustomPiece = Widget? Function(Square square);
+typedef PromotionCommited = void Function({required PieceType pieceType});
 
 class Board {
   final String fen;
@@ -24,6 +25,7 @@ class Board {
   final Color darkSquareColor;
   final Moved _onMove;
   final Promoted _onPromote;
+  final PromotionCommited _onPromotionCommited;
   final Option<BuildPiece> buildPiece;
   final Option<BuildSquare> buildSquare;
   final Option<BuildCustomPiece> buildCustomPiece;
@@ -40,6 +42,7 @@ class Board {
     required this.boardColors,
     required Moved onMove,
     required Promoted onPromote,
+    required PromotionCommited onPromotionCommited,
     BuildPiece? buildPiece,
     BuildSquare? buildSquare,
     BuildCustomPiece? buildCustomPiece,
@@ -47,6 +50,7 @@ class Board {
     required this.arrows,
   })  : _onMove = onMove,
         _onPromote = onPromote,
+        _onPromotionCommited = onPromotionCommited,
         buildPiece = Option.fromNullable(buildPiece),
         buildSquare = Option.fromNullable(buildSquare),
         buildCustomPiece = Option.fromNullable(buildCustomPiece);
@@ -64,6 +68,8 @@ class Board {
           to: move.to,
           promotion: Option.of(pieceType.getOrElse(() => PieceType.queen)),
         ));
+        _onPromotionCommited(
+            pieceType: pieceType.getOrElse(() => PieceType.queen));
         return Future.value();
       } else {
         return Future.error("Move cancelled");

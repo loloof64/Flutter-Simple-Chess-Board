@@ -1,3 +1,7 @@
+## 0.8.0
+
+* We must add a new callback to the ChessBoard : onPromotionCommited.
+
 ## 0.7.0
 
 * We can change colors.

@@ -58,16 +58,16 @@ class Board {
   Future<void> makeMove(ShortMove move) async {
     if (utils.isPromoting(fen, move)) {
       final pieceType = await promotion;
-      return pieceType.match(
-        (t) {
-          _onMove(ShortMove(
-            from: move.from,
-            to: move.to,
-            promotion: Option.of(t),
-          ));
-        },
-        () => Future.error("Move cancelled"),
-      );
+      if (pieceType.isSome()) {
+        _onMove(ShortMove(
+          from: move.from,
+          to: move.to,
+          promotion: Option.of(pieceType.getOrElse(() => PieceType.queen)),
+        ));
+        return Future.value();
+      } else {
+        return Future.error("Move cancelled");
+      }
     } else {
       _onMove(move);
     }

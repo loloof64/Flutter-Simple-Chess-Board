@@ -70,6 +70,9 @@ class SimpleChessBoard extends StatelessWidget {
   /// Handler for when user wants to make a promotion on board.
   final Future<PieceType?> Function() onPromote;
 
+  /// Handler for when a promotion has been commited on the board.
+  final void Function({required PieceType pieceType}) onPromotionCommited;
+
   /// Does the border with coordinates and player turn must be visible ?
   final bool showCoordinatesZone;
 
@@ -98,6 +101,7 @@ class SimpleChessBoard extends StatelessWidget {
     required this.blackPlayerType,
     required this.onMove,
     required this.onPromote,
+    required this.onPromotionCommited,
     required this.chessBoardColors,
     this.engineThinking = false,
     this.showCoordinatesZone = true,
@@ -328,7 +332,7 @@ class _Chessboard extends StatefulWidget {
 }
 
 class _ChessboardState extends State<_Chessboard> {
-  Option<HalfMove> clickMove = Option.none();
+  Option<HalfMove> clickMove = const Option.none();
 
   @override
   Widget build(BuildContext context) {
@@ -369,14 +373,15 @@ class _ChessboardState extends State<_Chessboard> {
   }
 
   Color? _getHighlight(Square square) {
-    return clickMove
+    final temp = clickMove
         .filter((t) => t.square == square.name)
-        .map((_) => widget.board.boardColors.selectionHighlightColor)
-        .alt(() => Option.fromPredicate(
-              widget.board.boardColors.lastMoveArrowColor,
-              (_) => widget.board.lastMove.contains(square.name),
-            ))
-        .toNullable();
+        .map((_) => widget.board.boardColors.selectionHighlightColor);
+    return temp.isSome()
+        ? temp.toNullable()
+        : Option.fromPredicate(
+            widget.board.boardColors.lastMoveArrowColor,
+            (_) => widget.board.lastMove.contains(square.name),
+          ).toNullable();
   }
 
   void _handleDrop(ShortMove move) {
@@ -386,27 +391,28 @@ class _ChessboardState extends State<_Chessboard> {
   }
 
   void _handleClick(HalfMove halfMove) {
-    clickMove.match(
-      (t) {
-        final sameSquare = t.square == halfMove.square;
-        final sameColorPiece = t.piece
-            .map2<Piece, bool>(halfMove.piece, (t, r) => t.color == r.color)
-            .getOrElse(() => false);
+    if (clickMove.isSome()) {
+      final t = clickMove.toNullable();
+      final sameSquare = t?.square == halfMove.square;
+      final sameColorPiece = t?.piece
+              .map2<Piece, bool>(halfMove.piece, (t, r) => t.color == r.color)
+              .toNullable() ??
+          false;
 
-        if (sameSquare) {
-          _clearClickMove();
-        } else if (sameColorPiece) {
-          _setClickMove(halfMove);
-        } else {
-          widget.board.makeMove(ShortMove(
-            from: t.square,
-            to: halfMove.square,
-          ));
-          _clearClickMove();
-        }
-      },
-      () => _setClickMove(halfMove),
-    );
+      if (sameSquare) {
+        _clearClickMove();
+      } else if (sameColorPiece) {
+        _setClickMove(halfMove);
+      } else {
+        widget.board.makeMove(ShortMove(
+          from: t?.square ?? '',
+          to: halfMove.square,
+        ));
+        _clearClickMove();
+      }
+    } else {
+      _setClickMove(halfMove);
+    }
   }
 
   void _setClickMove(HalfMove halfMove) {
@@ -417,7 +423,7 @@ class _ChessboardState extends State<_Chessboard> {
 
   void _clearClickMove() {
     setState(() {
-      clickMove = Option.none();
+      clickMove = const Option.none();
     });
   }
 }

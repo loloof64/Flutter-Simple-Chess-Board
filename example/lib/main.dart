@@ -54,10 +54,7 @@ class _MyHomePageState extends State<MyHomePage> {
     final success = _chess.move(<String, String?>{
       'from': move.from,
       'to': move.to,
-      'promotion': move.promotion.match(
-        (piece) => piece.name,
-        () => null,
-      ),
+      'promotion': move.promotion.toNullable()?.name,
     });
     if (success) {
       setState(() {
@@ -129,6 +126,7 @@ class _MyHomePageState extends State<MyHomePage> {
           blackPlayerType: PlayerType.human,
           lastMoveToHighlight: _lastMoveArrowCoordinates,
           onPromote: () => handlePromotion(context),
+          onPromotionCommited: ({required PieceType pieceType}) => {},
         ),
       ),
     );

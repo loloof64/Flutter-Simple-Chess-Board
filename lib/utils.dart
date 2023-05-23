@@ -51,4 +51,4 @@ noop1(arg1) {}
 
 Future<PieceType?> defaultPromoting() => Future.value(PieceType.queen);
 
-void defaultPromotionCommitedHandler({required PieceType pieceType}) => {};
+void defaultPromotionCommitedHandler({required ShortMove moveDone}) => {};

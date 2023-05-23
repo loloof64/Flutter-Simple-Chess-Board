@@ -15,7 +15,7 @@ typedef Moved = void Function(ShortMove move);
 typedef BuildPiece = Widget? Function(Piece piece, double size);
 typedef BuildSquare = Widget? Function(BoardColor color, double size);
 typedef BuildCustomPiece = Widget? Function(Square square);
-typedef PromotionCommited = void Function({required PieceType pieceType});
+typedef PromotionCommited = void Function({required ShortMove moveDone});
 
 class Board {
   final String fen;
@@ -63,13 +63,13 @@ class Board {
     if (utils.isPromoting(fen, move)) {
       final pieceType = await promotion;
       if (pieceType.isSome()) {
-        _onMove(ShortMove(
+        final moveToDo = ShortMove(
           from: move.from,
           to: move.to,
           promotion: Option.of(pieceType.getOrElse(() => PieceType.queen)),
-        ));
-        _onPromotionCommited(
-            pieceType: pieceType.getOrElse(() => PieceType.queen));
+        );
+        _onMove(moveToDo);
+        _onPromotionCommited(moveDone: moveToDo);
         return Future.value();
       } else {
         return Future.error("Move cancelled");

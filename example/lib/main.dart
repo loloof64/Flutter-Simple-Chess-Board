@@ -126,8 +126,8 @@ class _MyHomePageState extends State<MyHomePage> {
           blackPlayerType: PlayerType.human,
           lastMoveToHighlight: _lastMoveArrowCoordinates,
           onPromote: () => handlePromotion(context),
-          onPromotionCommited: ({required PieceType pieceType}) =>
-              {print(pieceType)},
+          onPromotionCommited: ({required ShortMove moveDone}) =>
+              {print(moveDone)},
         ),
       ),
     );

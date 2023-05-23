@@ -71,7 +71,7 @@ class SimpleChessBoard extends StatelessWidget {
   final Future<PieceType?> Function() onPromote;
 
   /// Handler for when a promotion has been commited on the board.
-  final void Function({required PieceType pieceType}) onPromotionCommited;
+  final void Function({required ShortMove moveDone}) onPromotionCommited;
 
   /// Does the border with coordinates and player turn must be visible ?
   final bool showCoordinatesZone;
@@ -305,7 +305,7 @@ class _Chessboard extends StatefulWidget {
     BoardColor orientation = BoardColor.white,
     Moved onMove = noop1,
     Promoted onPromote = defaultPromoting,
-    void Function({required PieceType pieceType}) onPromotionCommited =
+    void Function({required ShortMove moveDone}) onPromotionCommited =
         defaultPromotionCommitedHandler,
     BuildPiece? buildPiece,
     BuildSquare? buildSquare,

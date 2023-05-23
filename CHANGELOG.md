@@ -1,3 +1,7 @@
+## 0.10.0
+
+* The callback onPromotionCommited gives us a ShortMove instance instead of just PieceType.
+
 ## 0.9.0
 
 * The callback onPromotionCommited is now effective.

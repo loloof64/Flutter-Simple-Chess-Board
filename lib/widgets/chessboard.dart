@@ -3,18 +3,30 @@ library flutter_chessboard;
 import 'dart:math';
 
 import 'package:flutter/material.dart';
-import 'package:fpdart/fpdart.dart' show Option;
-import 'package:provider/provider.dart';
+import 'package:chess/chess.dart' as chess;
+import 'package:simple_chess_board/models/piece.dart';
+import 'package:simple_chess_board/widgets/chess_vectors_definitions.dart';
 import '../models/piece_type.dart';
-import '../models/board.dart';
 import '../models/board_arrow.dart';
 import '../models/board_color.dart';
-import '../models/half_move.dart';
-import '../models/piece.dart';
 import '../models/short_move.dart';
-import '../models/square.dart';
-import '../utils.dart';
-import '../widgets/ui_square.dart';
+
+final piecesDefinition = {
+  "wp": whitePawnDefinition,
+  "wn": whiteKnightDefinition,
+  "wb": whiteBishopDefinition,
+  "wr": whiteRookDefinition,
+  "wq": whiteQueenDefinition,
+  "wk": whiteKingDefinition,
+  "bp": blackPawnDefinition,
+  "bn": blackKnightDefinition,
+  "bb": blackBishopDefinition,
+  "br": blackRookDefinition,
+  "bq": blackQueenDefinition,
+  "bk": blackKingDefinition,
+};
+
+const baseImageSize = 45.0;
 
 /// Colors used by the chess board.
 class ChessBoardColors {
@@ -56,7 +68,7 @@ class SimpleChessBoard extends StatelessWidget {
   final String fen;
 
   /// Is Black side at bottom of the board, or white side ?
-  final BoardColor orientation;
+  final bool blackSideAtBottom;
 
   /// White type (human/cpu).
   final PlayerType whitePlayerType;
@@ -96,7 +108,7 @@ class SimpleChessBoard extends StatelessWidget {
   const SimpleChessBoard({
     Key? key,
     required this.fen,
-    required this.orientation,
+    this.blackSideAtBottom = false,
     required this.whitePlayerType,
     required this.blackPlayerType,
     required this.onMove,
@@ -148,25 +160,25 @@ class SimpleChessBoard extends StatelessWidget {
                         ...getFilesCoordinates(
                           boardSize: size,
                           top: true,
-                          reversed: orientation == BoardColor.black,
+                          reversed: blackSideAtBottom,
                           coordinatesColor: chessBoardColors.coordinatesColor,
                         ),
                         ...getFilesCoordinates(
                           boardSize: size,
                           top: false,
-                          reversed: orientation == BoardColor.black,
+                          reversed: blackSideAtBottom,
                           coordinatesColor: chessBoardColors.coordinatesColor,
                         ),
                         ...getRanksCoordinates(
                           boardSize: size,
                           left: true,
-                          reversed: orientation == BoardColor.black,
+                          reversed: blackSideAtBottom,
                           coordinatesColor: chessBoardColors.coordinatesColor,
                         ),
                         ...getRanksCoordinates(
                           boardSize: size,
                           left: false,
-                          reversed: orientation == BoardColor.black,
+                          reversed: blackSideAtBottom,
                           coordinatesColor: chessBoardColors.coordinatesColor,
                         ),
                         _buildPlayerTurn(size: size),
@@ -177,10 +189,7 @@ class SimpleChessBoard extends StatelessWidget {
             _Chessboard(
               fen: fen,
               size: size * boardSizeProportion,
-              onMove: _processMove,
-              onPromote: onPromote,
-              onPromotionCommited: onPromotionCommited,
-              orientation: orientation,
+              blackSideAtBottom: blackSideAtBottom,
               lastMoveHighlightColor: chessBoardColors.lastMoveArrowColor,
               selectionHighlightColor: chessBoardColors.selectionHighlightColor,
               boardColors: chessBoardColors,
@@ -296,86 +305,47 @@ Iterable<Widget> getRanksCoordinates({
 }
 
 class _Chessboard extends StatefulWidget {
-  final Board board;
+  final ChessBoardColors boardColors;
+  final double size;
+  final bool blackSideAtBottom;
+  final String fen;
 
   _Chessboard({
-    required String fen,
-    required double size,
-    required ChessBoardColors boardColors,
-    BoardColor orientation = BoardColor.white,
-    Moved onMove = noop1,
-    Promoted onPromote = defaultPromoting,
-    void Function({required ShortMove moveDone}) onPromotionCommited =
-        defaultPromotionCommitedHandler,
-    BuildPiece? buildPiece,
-    BuildSquare? buildSquare,
-    BuildCustomPiece? buildCustomPiece,
+    required this.fen,
+    required this.size,
+    required this.boardColors,
+    required this.blackSideAtBottom,
     Color lastMoveHighlightColor = const Color.fromRGBO(128, 128, 128, .3),
     Color selectionHighlightColor = const Color.fromRGBO(128, 128, 128, .3),
     List<String> lastMove = const [],
     List<BoardArrow> arrows = const [],
-  }) : board = Board(
-          fen: fen,
-          size: size,
-          boardColors: boardColors,
-          orientation: orientation,
-          onMove: onMove,
-          lightSquareColor: boardColors.lightSquaresColor,
-          darkSquareColor: boardColors.darkSquaresColor,
-          onPromote: onPromote,
-          onPromotionCommited: onPromotionCommited,
-          buildPiece: buildPiece,
-          buildSquare: buildSquare,
-          buildCustomPiece: buildCustomPiece,
-          lastMove: lastMove,
-          arrows: arrows,
-        );
+  });
 
   @override
   State<StatefulWidget> createState() => _ChessboardState();
 }
 
 class _ChessboardState extends State<_Chessboard> {
-  Option<HalfMove> clickMove = const Option.none();
+  @override
+  void initState() {
+    super.initState();
+  }
 
   @override
   Widget build(BuildContext context) {
-    return Provider.value(
-      value: widget.board,
-      child: SizedBox(
-        width: widget.board.size,
-        height: widget.board.size,
-        child: Stack(
-            alignment: AlignmentDirectional.topStart,
-            textDirection: TextDirection.ltr,
-            children: [
-              ...widget.board.squares.map((it) {
-                return UISquare(
-                  square: it,
-                  onClick: _handleClick,
-                  onDrop: _handleDrop,
-                  highlight: _getHighlight(it),
-                );
-              }).toList(growable: false),
-              if (widget.board.arrows.isNotEmpty)
-                IgnorePointer(
-                  child: AspectRatio(
-                    aspectRatio: 1.0,
-                    child: CustomPaint(
-                      painter: _ArrowPainter(
-                        widget.board.arrows,
-                        widget.board.orientation,
-                        widget.board.boardColors.lastMoveArrowColor,
-                      ),
-                      child: Container(),
-                    ),
-                  ),
-                ),
-            ]),
+    return CustomPaint(
+      painter: _ChessBoardPainter(
+        colors: widget.boardColors,
+        blackSideAtBottom: widget.blackSideAtBottom,
+        fen: widget.fen,
       ),
+      size: Size.square(widget.size),
+      isComplex: true,
+      willChange: true,
     );
   }
 
+/* todo remove
   Color? _getHighlight(Square square) {
     final temp = clickMove
         .filter((t) => t.square == square.name)
@@ -387,13 +357,17 @@ class _ChessboardState extends State<_Chessboard> {
             (_) => widget.board.lastMove.contains(square.name),
           ).toNullable();
   }
+  */
 
+/* todo remove
   void _handleDrop(ShortMove move) {
     widget.board.makeMove(move).then((_) {
       _clearClickMove();
     });
   }
+  */
 
+/* todo remove
   void _handleClick(HalfMove halfMove) {
     if (clickMove.isSome()) {
       final t = clickMove.toNullable();
@@ -418,7 +392,9 @@ class _ChessboardState extends State<_Chessboard> {
       _setClickMove(halfMove);
     }
   }
+  */
 
+/* todo remove
   void _setClickMove(HalfMove halfMove) {
     setState(() {
       clickMove = Option.of(halfMove).flatMap((t) => t.piece.map((_) => t));
@@ -429,6 +405,116 @@ class _ChessboardState extends State<_Chessboard> {
     setState(() {
       clickMove = const Option.none();
     });
+  }
+  */
+}
+
+Map<String, Piece?> getSquares(String fen) {
+  final boardLogic = chess.Chess.fromFEN(fen);
+  final result = <String, Piece?>{};
+  for (final squareName in chess.Chess.SQUARES.keys) {
+    final tempValue = boardLogic.get(squareName);
+    if (tempValue == null) {
+      result[squareName] = null;
+    } else {
+      result[squareName] = Piece(
+        tempValue.color == chess.Color.WHITE
+            ? BoardColor.white
+            : BoardColor.black,
+        PieceType.fromString(tempValue.type.toString()),
+      );
+    }
+  }
+  return result;
+}
+
+String coordinatesToSquareName(int file, int rank) {
+  return String.fromCharCode('a'.codeUnitAt(0) + file) +
+      String.fromCharCode('1'.codeUnitAt(0) + rank);
+}
+
+class _ChessBoardPainter extends CustomPainter {
+  final ChessBoardColors colors;
+  final bool blackSideAtBottom;
+  final String fen;
+  final Map<String, Piece?> _squares;
+
+  _ChessBoardPainter({
+    required this.colors,
+    required this.blackSideAtBottom,
+    required this.fen,
+  }) : _squares = getSquares(fen);
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    _drawBackground(canvas, size);
+    _drawCells(canvas, size);
+    _drawPieces(canvas, size).then((value) => null);
+  }
+
+  @override
+  bool shouldRepaint(covariant CustomPainter oldDelegate) {
+    return true;
+  }
+
+  void _drawBackground(Canvas canvas, Size size) {
+    final rect = Rect.fromLTWH(0, 0, size.width, size.height);
+    final paint = Paint()..color = colors.coordinatesZoneColor;
+    canvas.drawRect(rect, paint);
+  }
+
+  void _drawCells(Canvas canvas, Size size) {
+    final cellSize = size.shortestSide / 8;
+    for (final row in [0, 1, 2, 3, 4, 5, 6, 7]) {
+      for (final col in [0, 1, 2, 3, 4, 5, 6, 7]) {
+        final isWhiteCell = (col + row) % 2 == 0;
+
+        final rect = Rect.fromLTWH(
+          cellSize * col,
+          cellSize * row,
+          cellSize,
+          cellSize,
+        );
+
+        final paint = Paint()
+          ..color =
+              isWhiteCell ? colors.lightSquaresColor : colors.darkSquaresColor;
+
+        canvas.drawRect(rect, paint);
+      }
+    }
+  }
+
+  Future<void> _drawPieces(Canvas canvas, Size size) async {
+    final cellSize = size.shortestSide / 8;
+
+    for (final row in [0, 1, 2, 3, 4, 5, 6, 7]) {
+      for (final col in [0, 1, 2, 3, 4, 5, 6, 7]) {
+        final file = blackSideAtBottom ? 7 - col : col;
+        final rank = blackSideAtBottom ? row : 7 - row;
+
+        final squareName = coordinatesToSquareName(file, rank);
+        final piece = _squares[squareName];
+
+        if (piece == null) continue;
+        final pieceDefinition = piecesDefinition[piece.name];
+        if (pieceDefinition == null) continue;
+
+        final offset = Offset(cellSize * col, cellSize * row);
+
+        canvas.save();
+
+        canvas.translate(offset.dx, offset.dy);
+        canvas.scale(cellSize / baseImageSize, cellSize / baseImageSize);
+
+        for (var vectorElement in pieceDefinition) {
+          vectorElement.paintIntoCanvas(
+              canvas, vectorElement.drawingParameters);
+        }
+
+        canvas.restore();
+      }
+    }
   }
 }
 

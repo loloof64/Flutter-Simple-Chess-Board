@@ -98,9 +98,6 @@ class _MyHomePageState extends State<MyHomePage> {
 
   @override
   Widget build(BuildContext context) {
-    final boardOrientation =
-        _blackAtBottom ? BoardColor.black : BoardColor.white;
-
     return Scaffold(
       appBar: AppBar(
         title: Text(widget.title),
@@ -121,7 +118,7 @@ class _MyHomePageState extends State<MyHomePage> {
           engineThinking: false,
           fen: _chess.fen,
           onMove: tryMakingMove,
-          orientation: boardOrientation,
+          blackSideAtBottom: _blackAtBottom,
           whitePlayerType: PlayerType.human,
           blackPlayerType: PlayerType.human,
           lastMoveToHighlight: _lastMoveArrowCoordinates,

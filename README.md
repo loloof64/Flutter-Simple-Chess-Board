@@ -127,3 +127,4 @@ You can find the repository on [Github](https://github.com/loloof64/Flutter-Simp
 
 * Using code from [Flutter Chess board](https://github.com/varunpvp/flutter_chessboard).
 * Using code from [Flutter Stateless Chess board](https://github.com/varunpvp/flutter_chessboard).
+* Using chess pieces definitions from [Wikimedia Commons](https://commons.wikimedia.org/wiki/Category:SVG_chess_pieces).

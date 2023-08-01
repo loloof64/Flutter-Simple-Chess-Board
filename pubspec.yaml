@@ -4,16 +4,14 @@ version: 0.10.0
 repository: https://github.com/loloof64/Flutter-Simple-Chess-Board
 
 environment:
-  sdk: ">=2.16.1 <4.0.0"
+  sdk: ">=3.0.0 <4.0.0"
   flutter: ">=1.17.0"
 
 dependencies:
   flutter:
     sdk: flutter
   chess: ^0.8.0
-  chess_vectors_flutter: ^1.0.16
   fpdart: ^0.6.0
-  provider: ^6.0.1
 
 dev_dependencies:
   flutter_test:
@@ -28,7 +26,7 @@ flutter:
 
   # To add assets to your package, add an assets section, like this:
   # assets:
-  #   - images/a_dot_burr.jpeg
+  #   - assets/chess_vectors/
   #   - images/a_dot_ham.jpeg
   #
   # For details regarding assets in packages, see

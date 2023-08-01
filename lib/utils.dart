@@ -1,28 +1,7 @@
 import 'package:chess/chess.dart' as ch;
-import 'package:fpdart/fpdart.dart';
 
-import 'models/board.dart';
-import 'models/board_color.dart';
-import 'models/piece.dart';
 import 'models/piece_type.dart';
 import 'models/short_move.dart';
-import 'models/square.dart';
-
-List<Square> getSquares(Board board) {
-  final chess = ch.Chess.fromFEN(board.fen);
-  return ch.Chess.SQUARES.keys.map((squareName) {
-    return Square(
-      board: board,
-      name: squareName,
-      piece: Option.fromNullable(chess.get(squareName)).map(
-        (t) => Piece(
-          t.color == ch.Color.WHITE ? BoardColor.white : BoardColor.black,
-          PieceType.fromString(t.type.toString()),
-        ),
-      ),
-    );
-  }).toList(growable: false);
-}
 
 bool isPromoting(String fen, ShortMove move) {
   final chess = ch.Chess.fromFEN(fen);
@@ -46,8 +25,6 @@ bool isPromoting(String fen, ShortMove move) {
       .map((it) => it["to"])
       .contains(move.to);
 }
-
-noop1(arg1) {}
 
 Future<PieceType?> defaultPromoting() => Future.value(PieceType.queen);
 

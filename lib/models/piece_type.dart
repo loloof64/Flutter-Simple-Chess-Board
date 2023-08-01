@@ -1,14 +1,21 @@
-class PieceType {
-  final String name;
+enum PieceType {
+  pawn,
+  knight,
+  bishop,
+  rook,
+  queen,
+  king;
 
-  const PieceType._value(this.name);
-
-  static const PieceType pawn = PieceType._value('p');
-  static const PieceType knight = PieceType._value('n');
-  static const PieceType bishop = PieceType._value('b');
-  static const PieceType rook = PieceType._value('r');
-  static const PieceType queen = PieceType._value('q');
-  static const PieceType king = PieceType._value('k');
+  get name {
+    return switch (this) {
+      PieceType.pawn => 'p',
+      PieceType.knight => 'n',
+      PieceType.bishop => 'b',
+      PieceType.rook => 'r',
+      PieceType.queen => 'q',
+      PieceType.king => 'k',
+    };
+  }
 
   factory PieceType.fromString(String value) {
     switch (value.toLowerCase()) {
@@ -27,20 +34,5 @@ class PieceType {
       default:
         throw "Unknown piece type";
     }
-  }
-
-  @override
-  int get hashCode => name.hashCode;
-
-  @override
-  String toString() => name;
-
-  String toLowerCase() => name;
-
-  String toUpperCase() => name.toUpperCase();
-
-  @override
-  bool operator ==(Object other) {
-    return other.runtimeType == runtimeType && hashCode == other.hashCode;
   }
 }

@@ -254,13 +254,9 @@ List<PathElement> parsePath(String pathStr) {
   var lineRegex =
       RegExp("^(L|l)$separatorFormat$valueFormat$separatorFormat$valueFormat");
   var cubicCurveRegex = RegExp(
-      "^(C|c)$separatorFormat$valueFormat$separatorFormat" +
-          "$valueFormat$separatorFormat$valueFormat$separatorFormat$valueFormat$separatorFormat" +
-          "$valueFormat$separatorFormat$valueFormat");
+      "^(C|c)$separatorFormat$valueFormat$separatorFormat$valueFormat$separatorFormat$valueFormat$separatorFormat$valueFormat$separatorFormat$valueFormat$separatorFormat$valueFormat");
   var arcRegex = RegExp(
-      "^(A|a)$separatorFormat$valueFormat$separatorFormat$valueFormat" +
-          "$separatorFormat$valueFormat$separatorFormat$valueFormat$separatorFormat$valueFormat" +
-          "$separatorFormat$valueFormat$separatorFormat$valueFormat");
+      "^(A|a)$separatorFormat$valueFormat$separatorFormat$valueFormat$separatorFormat$valueFormat$separatorFormat$valueFormat$separatorFormat$valueFormat$separatorFormat$valueFormat$separatorFormat$valueFormat");
   var closeRegex = RegExp("^(z)");
 
   var elementsToReturn = <PathElement>[];

@@ -4,6 +4,7 @@ import 'dart:math';
 
 import 'package:flutter/material.dart';
 import 'package:chess/chess.dart' as chess;
+import 'package:fpdart/fpdart.dart' as fpdart;
 import 'package:simple_chess_board/models/piece.dart';
 import 'package:simple_chess_board/widgets/chess_vectors_definitions.dart';
 import '../models/piece_type.dart';
@@ -42,15 +43,20 @@ class ChessBoardColors {
   /// The color of last move arrow.
   Color lastMoveArrowColor = Colors.greenAccent;
 
-  /// The color of current selected square (for moving a piece with clicks
-  /// avoiding drag and drop).
-  Color selectionHighlightColor = Colors.greenAccent;
-
   /// The color of the circular progress bar.
   Color circularProgressBarColor = Colors.teal;
 
   /// The color of the coordinates.
   Color coordinatesColor = Colors.yellow.shade400;
+
+  /// The color of the start square for drag and drop, or for click then click move.
+  Color startSquareColor = Colors.red;
+
+  /// The color of the end square for drag and drop
+  Color endSquareColor = Colors.green;
+
+  /// The color of the drag and drop indicator's cells.
+  Color dndIndicatorColor = Colors.purple;
 
   /// Constructor.
   ChessBoardColors();
@@ -190,9 +196,8 @@ class SimpleChessBoard extends StatelessWidget {
               fen: fen,
               size: size * boardSizeProportion,
               blackSideAtBottom: blackSideAtBottom,
-              lastMoveHighlightColor: chessBoardColors.lastMoveArrowColor,
-              selectionHighlightColor: chessBoardColors.selectionHighlightColor,
               boardColors: chessBoardColors,
+              processMove: _processMove,
               arrows: <BoardArrow>[
                 if (lastMoveToHighlight != null)
                   BoardArrow(
@@ -221,6 +226,19 @@ class SimpleChessBoard extends StatelessWidget {
       }),
     );
   }
+}
+
+class _DragAndDropDetails {
+  Piece movedPiece;
+  (int, int) startCell;
+  (int, int) endCell;
+  (double, double) position;
+
+  _DragAndDropDetails({
+    required this.movedPiece,
+    required this.startCell,
+    required this.position,
+  }) : endCell = startCell;
 }
 
 class _PlayerTurn extends StatelessWidget {
@@ -309,14 +327,14 @@ class _Chessboard extends StatefulWidget {
   final double size;
   final bool blackSideAtBottom;
   final String fen;
+  final void Function(ShortMove move) processMove;
 
-  _Chessboard({
+  const _Chessboard({
     required this.fen,
     required this.size,
     required this.boardColors,
     required this.blackSideAtBottom,
-    Color lastMoveHighlightColor = const Color.fromRGBO(128, 128, 128, .3),
-    Color selectionHighlightColor = const Color.fromRGBO(128, 128, 128, .3),
+    required this.processMove,
     List<String> lastMove = const [],
     List<BoardArrow> arrows = const [],
   });
@@ -326,22 +344,103 @@ class _Chessboard extends StatefulWidget {
 }
 
 class _ChessboardState extends State<_Chessboard> {
+  _DragAndDropDetails? _dndDetails;
+  Map<String, Piece?> _squares = <String, Piece?>{};
+
   @override
   void initState() {
+    _squares = getSquares(widget.fen);
     super.initState();
+  }
+
+  void _handleTapDown(TapDownDetails details) {
+    print('Tap at ${details.localPosition}');
+  }
+
+  void _handlePanStart(DragStartDetails details) {
+    final position = details.localPosition;
+    final cellsSize = widget.size / 8;
+    final col = position.dx ~/ cellsSize;
+    final row = position.dy ~/ cellsSize;
+
+    final file = widget.blackSideAtBottom ? 7 - col : col;
+    final rank = widget.blackSideAtBottom ? row : 7 - row;
+
+    final squareName = coordinatesToSquareName(file, rank);
+    final piece = _squares[squareName];
+
+    if (piece == null) return;
+
+    setState(() {
+      _dndDetails = _DragAndDropDetails(
+        movedPiece: piece,
+        startCell: (file, rank),
+        position: (details.localPosition.dx, details.localPosition.dy),
+      );
+    });
+  }
+
+  void _handlePanUpdate(DragUpdateDetails details) {
+    final position = details.localPosition;
+    final cellsSize = widget.size / 8;
+    final col = position.dx ~/ cellsSize;
+    final row = position.dy ~/ cellsSize;
+
+    final file = widget.blackSideAtBottom ? 7 - col : col;
+    final rank = widget.blackSideAtBottom ? row : 7 - row;
+
+    setState(() {
+      _dndDetails?.endCell = (file, rank);
+      _dndDetails?.position =
+          (details.localPosition.dx, details.localPosition.dy);
+    });
+  }
+
+  void _handlePanEnd(DragEndDetails details) {
+    if (_dndDetails == null) return;
+    final from = coordinatesToSquareName(
+        _dndDetails!.startCell.$1, _dndDetails!.startCell.$2);
+    final to = coordinatesToSquareName(
+        _dndDetails!.endCell.$1, _dndDetails!.endCell.$2);
+    final move = ShortMove(from: from, to: to);
+    widget.processMove(move);
+    setState(() {
+      _dndDetails = null;
+    });
+    Future.delayed(
+      const Duration(milliseconds: 10),
+      () => setState(
+        () => _squares = getSquares(widget.fen),
+      ),
+    );
+  }
+
+  void _handlePanCancel() {
+    if (_dndDetails == null) return;
+    setState(() {
+      _dndDetails = null;
+    });
   }
 
   @override
   Widget build(BuildContext context) {
-    return CustomPaint(
-      painter: _ChessBoardPainter(
-        colors: widget.boardColors,
-        blackSideAtBottom: widget.blackSideAtBottom,
-        fen: widget.fen,
+    return GestureDetector(
+      onTapDown: _handleTapDown,
+      onPanStart: _handlePanStart,
+      onPanUpdate: _handlePanUpdate,
+      onPanEnd: _handlePanEnd,
+      onPanCancel: _handlePanCancel,
+      child: CustomPaint(
+        painter: _ChessBoardPainter(
+          colors: widget.boardColors,
+          blackSideAtBottom: widget.blackSideAtBottom,
+          squares: _squares,
+          dragAndDropDetails: _dndDetails,
+        ),
+        size: Size.square(widget.size),
+        isComplex: true,
+        willChange: true,
       ),
-      size: Size.square(widget.size),
-      isComplex: true,
-      willChange: true,
     );
   }
 
@@ -436,20 +535,22 @@ String coordinatesToSquareName(int file, int rank) {
 class _ChessBoardPainter extends CustomPainter {
   final ChessBoardColors colors;
   final bool blackSideAtBottom;
-  final String fen;
-  final Map<String, Piece?> _squares;
+  final Map<String, Piece?> squares;
+  final _DragAndDropDetails? dragAndDropDetails;
 
   _ChessBoardPainter({
     required this.colors,
     required this.blackSideAtBottom,
-    required this.fen,
-  }) : _squares = getSquares(fen);
+    required this.squares,
+    required this.dragAndDropDetails,
+  });
 
   @override
   void paint(Canvas canvas, Size size) {
     _drawBackground(canvas, size);
     _drawCells(canvas, size);
-    _drawPieces(canvas, size).then((value) => null);
+    _drawPieces(canvas, size);
+    _drawMovedPiece(canvas, size);
   }
 
   @override
@@ -467,6 +568,9 @@ class _ChessBoardPainter extends CustomPainter {
     final cellSize = size.shortestSide / 8;
     for (final row in [0, 1, 2, 3, 4, 5, 6, 7]) {
       for (final col in [0, 1, 2, 3, 4, 5, 6, 7]) {
+        final file = blackSideAtBottom ? 7 - col : col;
+        final rank = blackSideAtBottom ? row : 7 - row;
+
         final isWhiteCell = (col + row) % 2 == 0;
 
         final rect = Rect.fromLTWH(
@@ -479,13 +583,26 @@ class _ChessBoardPainter extends CustomPainter {
         final paint = Paint()
           ..color =
               isWhiteCell ? colors.lightSquaresColor : colors.darkSquaresColor;
+        final isStartSquare = dragAndDropDetails != null &&
+            dragAndDropDetails?.startCell.$1 == file &&
+            dragAndDropDetails?.startCell.$2 == rank;
+        final isEndSquare = dragAndDropDetails != null &&
+            dragAndDropDetails?.endCell.$1 == file &&
+            dragAndDropDetails?.endCell.$2 == rank;
+        final isDndIndicatorSquare = dragAndDropDetails != null &&
+                dragAndDropDetails?.endCell.$1 == file ||
+            dragAndDropDetails?.endCell.$2 == rank;
+
+        if (isDndIndicatorSquare) paint.color = colors.dndIndicatorColor;
+        if (isStartSquare) paint.color = colors.startSquareColor;
+        if (isEndSquare) paint.color = colors.endSquareColor;
 
         canvas.drawRect(rect, paint);
       }
     }
   }
 
-  Future<void> _drawPieces(Canvas canvas, Size size) async {
+  _drawPieces(Canvas canvas, Size size) {
     final cellSize = size.shortestSide / 8;
 
     for (final row in [0, 1, 2, 3, 4, 5, 6, 7]) {
@@ -493,8 +610,13 @@ class _ChessBoardPainter extends CustomPainter {
         final file = blackSideAtBottom ? 7 - col : col;
         final rank = blackSideAtBottom ? row : 7 - row;
 
+        final isTheMovedPiece = dragAndDropDetails != null &&
+            dragAndDropDetails?.startCell.$1 == file &&
+            dragAndDropDetails?.startCell.$2 == rank;
+        if (isTheMovedPiece) continue;
+
         final squareName = coordinatesToSquareName(file, rank);
-        final piece = _squares[squareName];
+        final piece = squares[squareName];
 
         if (piece == null) continue;
         final pieceDefinition = piecesDefinition[piece.name];
@@ -515,6 +637,30 @@ class _ChessBoardPainter extends CustomPainter {
         canvas.restore();
       }
     }
+  }
+
+  void _drawMovedPiece(Canvas canvas, Size size) {
+    final cellSize = size.shortestSide / 8;
+
+    final pieceDefinition =
+        piecesDefinition[dragAndDropDetails?.movedPiece.name];
+    if (pieceDefinition == null) return;
+
+    final offset = Offset(
+      dragAndDropDetails?.position.$1 ?? -cellSize,
+      dragAndDropDetails?.position.$2 ?? -cellSize,
+    );
+
+    canvas.save();
+
+    canvas.translate(offset.dx, offset.dy);
+    canvas.scale(cellSize / baseImageSize, cellSize / baseImageSize);
+
+    for (var vectorElement in pieceDefinition) {
+      vectorElement.paintIntoCanvas(canvas, vectorElement.drawingParameters);
+    }
+
+    canvas.restore();
   }
 }
 

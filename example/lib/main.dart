@@ -44,7 +44,8 @@ class _MyHomePageState extends State<MyHomePage> {
       ..darkSquaresColor = Colors.blue.shade600
       ..coordinatesZoneColor = Colors.redAccent.shade200
       ..lastMoveArrowColor = Colors.cyan
-      ..selectionHighlightColor = Colors.orange
+      ..startSquareColor = Colors.orange
+      ..endSquareColor = Colors.green
       ..circularProgressBarColor = Colors.red
       ..coordinatesColor = Colors.green;
     super.initState();
@@ -118,7 +119,7 @@ class _MyHomePageState extends State<MyHomePage> {
           engineThinking: false,
           fen: _chess.fen,
           onMove: tryMakingMove,
-          blackSideAtBottom: _blackAtBottom,
+          blackSideAtBottom: true,
           whitePlayerType: PlayerType.human,
           blackPlayerType: PlayerType.human,
           lastMoveToHighlight: _lastMoveArrowCoordinates,

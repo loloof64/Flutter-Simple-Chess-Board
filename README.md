@@ -29,6 +29,8 @@ A simple chess board, where:
 
 If you want to implement game logic, you can use the [chess](https://pub.dev/packages/chess) package.
 
+Please, also notice, that when there is a pending promotion, you should prevent the user to reverse the board orientation. Otherwise the result can be quite ugly. This can easily be done by showing a modal over your interface when the user is invited to choose a promotion piece.
+
 ## Getting started
 
 To use SimpleChessBoard widget, add [simple_chess_board](https://pub.dev/packages/simple_chess_board/install) as a dependency in your pubspec.yaml .

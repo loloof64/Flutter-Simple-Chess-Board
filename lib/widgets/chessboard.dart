@@ -382,6 +382,14 @@ class _ChessboardState extends State<_Chessboard> {
 
     if (piece == null) return;
 
+    final isWhiteTurn = widget.fen.split(" ")[1] == "w";
+
+    final isNotAPieceOfPlayerInTurn = isWhiteTurn
+        ? piece.color == BoardColor.black
+        : piece.color == BoardColor.white;
+
+    if (isNotAPieceOfPlayerInTurn) return;
+
     setState(() {
       _dndDetails = _DragAndDropDetails(
         movedPiece: piece,

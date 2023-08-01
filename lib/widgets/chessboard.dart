@@ -198,13 +198,12 @@ class SimpleChessBoard extends StatelessWidget {
               blackSideAtBottom: blackSideAtBottom,
               boardColors: chessBoardColors,
               processMove: _processMove,
-              arrows: <BoardArrow>[
-                if (lastMoveToHighlight != null)
-                  BoardArrow(
-                    from: lastMoveToHighlight!.from,
-                    to: lastMoveToHighlight!.to,
-                  )
-              ],
+              arrow: (lastMoveToHighlight != null)
+                  ? BoardArrow(
+                      from: lastMoveToHighlight!.from,
+                      to: lastMoveToHighlight!.to,
+                    )
+                  : null,
             ),
             if (engineThinking)
               SizedBox(
@@ -327,6 +326,7 @@ class _Chessboard extends StatefulWidget {
   final double size;
   final bool blackSideAtBottom;
   final String fen;
+  final BoardArrow? arrow;
   final void Function(ShortMove move) processMove;
 
   const _Chessboard({
@@ -335,8 +335,7 @@ class _Chessboard extends StatefulWidget {
     required this.boardColors,
     required this.blackSideAtBottom,
     required this.processMove,
-    List<String> lastMove = const [],
-    List<BoardArrow> arrows = const [],
+    required this.arrow,
   });
 
   @override
@@ -408,7 +407,7 @@ class _ChessboardState extends State<_Chessboard> {
       _dndDetails = null;
     });
     Future.delayed(
-      const Duration(milliseconds: 10),
+      const Duration(milliseconds: 35),
       () => setState(
         () => _squares = getSquares(widget.fen),
       ),
@@ -436,6 +435,7 @@ class _ChessboardState extends State<_Chessboard> {
           blackSideAtBottom: widget.blackSideAtBottom,
           squares: _squares,
           dragAndDropDetails: _dndDetails,
+          arrow: widget.arrow,
         ),
         size: Size.square(widget.size),
         isComplex: true,
@@ -537,12 +537,14 @@ class _ChessBoardPainter extends CustomPainter {
   final bool blackSideAtBottom;
   final Map<String, Piece?> squares;
   final _DragAndDropDetails? dragAndDropDetails;
+  final BoardArrow? arrow;
 
   _ChessBoardPainter({
     required this.colors,
     required this.blackSideAtBottom,
     required this.squares,
     required this.dragAndDropDetails,
+    required this.arrow,
   });
 
   @override
@@ -550,6 +552,7 @@ class _ChessBoardPainter extends CustomPainter {
     _drawBackground(canvas, size);
     _drawCells(canvas, size);
     _drawPieces(canvas, size);
+    _drawLastMoveArrow(canvas, size);
     _drawMovedPiece(canvas, size);
   }
 
@@ -602,7 +605,131 @@ class _ChessBoardPainter extends CustomPainter {
     }
   }
 
-  _drawPieces(Canvas canvas, Size size) {
+  void _drawLastMoveArrow(Canvas canvas, Size size) {
+    if (arrow == null) return;
+
+    final blockSize = size.width / 8;
+    final halfBlockSize = blockSize / 2;
+    final arrowMultiplier = blockSize * 0.1;
+
+    final startFile = files.indexOf(arrow!.from[0]);
+    final startRank = int.parse(arrow!.from[1]) - 1;
+    final endFile = files.indexOf(arrow!.to[0]);
+    final endRank = int.parse(arrow!.to[1]) - 1;
+
+    int effectiveRowStart = 0;
+    int effectiveColumnStart = 0;
+    int effectiveRowEnd = 0;
+    int effectiveColumnEnd = 0;
+
+    if (blackSideAtBottom) {
+      effectiveColumnStart = 7 - startFile;
+      effectiveColumnEnd = 7 - endFile;
+      effectiveRowStart = startRank;
+      effectiveRowEnd = endRank;
+    } else {
+      effectiveColumnStart = startFile;
+      effectiveColumnEnd = endFile;
+      effectiveRowStart = 7 - startRank;
+      effectiveRowEnd = 7 - endRank;
+    }
+
+    final startOffset = Offset(
+        ((effectiveColumnStart + 1) * blockSize) - halfBlockSize,
+        ((effectiveRowStart + 1) * blockSize) - halfBlockSize);
+    final endOffset = Offset(
+        ((effectiveColumnEnd + 1) * blockSize) - halfBlockSize,
+        ((effectiveRowEnd + 1) * blockSize) - halfBlockSize);
+
+    final yDist = endOffset.dy - startOffset.dy;
+    final xDist = endOffset.dx - startOffset.dx;
+
+    final paint = Paint()
+      ..strokeWidth = halfBlockSize * 0.150
+      ..color = colors.lastMoveArrowColor;
+
+    canvas.drawLine(startOffset,
+        Offset(startOffset.dx + xDist, startOffset.dy + yDist), paint);
+
+    var arrowPoint = endOffset;
+    double arrowLength = sqrt(
+      pow((startOffset.dx - endOffset.dx).abs(), 2) +
+          pow((startOffset.dy - endOffset.dy).abs(), 2),
+    );
+    double arrowAngle = atan2(
+      (startOffset.dy - endOffset.dy).abs(),
+      (startOffset.dx - endOffset.dx).abs(),
+    );
+
+    double pointX, pointY;
+    if (startOffset.dx > endOffset.dx) {
+      pointX = startOffset.dx -
+          (cos(arrowAngle) * (arrowLength - (3 * arrowMultiplier)));
+    } else {
+      pointX = cos(arrowAngle) * (arrowLength - (3 * arrowMultiplier)) +
+          startOffset.dx;
+    }
+
+    if (startOffset.dy > endOffset.dy) {
+      pointY = startOffset.dy -
+          (sin(arrowAngle) * (arrowLength - (3 * arrowMultiplier)));
+    } else {
+      pointY = (sin(arrowAngle) * (arrowLength - (3 * arrowMultiplier))) +
+          startOffset.dy;
+    }
+
+    Offset arrowPointBack = Offset(pointX, pointY);
+
+    double angleB =
+        atan2((3 * arrowMultiplier), (arrowLength - (3 * arrowMultiplier)));
+
+    double angleC =
+        pi * (90 - (arrowAngle * (180 / pi)) - (angleB * (180 / pi))) / 180;
+
+    double secondaryLength = (3 * arrowMultiplier) / sin(angleB);
+
+    if (startOffset.dx > endOffset.dx) {
+      pointX = startOffset.dx - (sin(angleC) * secondaryLength);
+    } else {
+      pointX = (sin(angleC) * secondaryLength) + startOffset.dx;
+    }
+
+    if (startOffset.dy > endOffset.dy) {
+      pointY = startOffset.dy - (cos(angleC) * secondaryLength);
+    } else {
+      pointY = (cos(angleC) * secondaryLength) + startOffset.dy;
+    }
+
+    Offset arrowPointLeft = Offset(pointX, pointY);
+    angleC = arrowAngle - angleB;
+
+    if (startOffset.dx > endOffset.dx) {
+      pointX = startOffset.dx - (cos(angleC) * secondaryLength);
+    } else {
+      pointX = (cos(angleC) * secondaryLength) + startOffset.dx;
+    }
+
+    if (startOffset.dy > endOffset.dy) {
+      pointY = startOffset.dy - (sin(angleC) * secondaryLength);
+    } else {
+      pointY = (sin(angleC) * secondaryLength) + startOffset.dy;
+    }
+
+    Offset arrowPointRight = Offset(pointX, pointY);
+
+    Path path = Path();
+    path.moveTo(arrowPoint.dx, arrowPoint.dy);
+    path.lineTo(arrowPointLeft.dx, arrowPointLeft.dy);
+    path.lineTo(arrowPointBack.dx, arrowPointBack.dy);
+    path.lineTo(arrowPointRight.dx, arrowPointRight.dy);
+
+    canvas.drawPath(
+      path,
+      paint..style = PaintingStyle.fill,
+    );
+  }
+
+  void _drawPieces(Canvas canvas, Size size) {
     final cellSize = size.shortestSide / 8;
 
     for (final row in [0, 1, 2, 3, 4, 5, 6, 7]) {

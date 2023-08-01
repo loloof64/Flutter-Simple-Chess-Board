@@ -356,6 +356,7 @@ class _Chessboard extends StatefulWidget {
 
 class _ChessboardState extends State<_Chessboard> {
   _DragAndDropDetails? _dndDetails;
+  (int, int)? _tapStart;
   Map<String, Piece?> _squares = <String, Piece?>{};
 
   @override
@@ -364,11 +365,70 @@ class _ChessboardState extends State<_Chessboard> {
     super.initState();
   }
 
-  void _handleTapDown(TapDownDetails details) {
-    print('Tap at ${details.localPosition}');
+  Future<void> _handleTapDown(TapDownDetails details) async {
+    final position = details.localPosition;
+    final cellsSize = widget.size / 8;
+    final col = position.dx ~/ cellsSize;
+    final row = position.dy ~/ cellsSize;
+
+    final file = widget.blackSideAtBottom ? 7 - col : col;
+    final rank = widget.blackSideAtBottom ? row : 7 - row;
+
+    if (_tapStart == null) {
+      final squareName = coordinatesToSquareName(file, rank);
+      final piece = _squares[squareName];
+
+      if (piece == null) return;
+
+      final isWhiteTurn = widget.fen.split(" ")[1] == "w";
+
+      final isNotAPieceOfPlayerInTurn = isWhiteTurn
+          ? piece.color == BoardColor.black
+          : piece.color == BoardColor.white;
+
+      if (isNotAPieceOfPlayerInTurn) return;
+      setState(() {
+        _tapStart = (file, rank);
+      });
+    } else {
+      final from = coordinatesToSquareName(_tapStart!.$1, _tapStart!.$2);
+      final to = coordinatesToSquareName(file, rank);
+      final move = ShortMove(from: from, to: to);
+
+      if (isPromoting(widget.fen, move)) {
+        final selectedPiece = await widget.onPromote();
+        if (selectedPiece != null) {
+          widget.onPromotionCommited(
+            moveDone: move,
+            pieceType: selectedPiece,
+          );
+          Future.delayed(
+            const Duration(milliseconds: 35),
+            () => setState(
+              () => _squares = getSquares(widget.fen),
+            ),
+          );
+        }
+        setState(() {
+          _tapStart = null;
+        });
+      } else {
+        widget.processMove(move);
+        setState(() {
+          _tapStart = null;
+        });
+        Future.delayed(
+          const Duration(milliseconds: 35),
+          () => setState(
+            () => _squares = getSquares(widget.fen),
+          ),
+        );
+      }
+    }
   }
 
   void _handlePanStart(DragStartDetails details) {
+    if (_tapStart != null) return;
     final position = details.localPosition;
     final cellsSize = widget.size / 8;
     final col = position.dx ~/ cellsSize;
@@ -476,6 +536,7 @@ class _ChessboardState extends State<_Chessboard> {
           blackSideAtBottom: widget.blackSideAtBottom,
           squares: _squares,
           dragAndDropDetails: _dndDetails,
+          tapStart: _tapStart,
           arrow: widget.arrow,
         ),
         size: Size.square(widget.size),
@@ -515,12 +576,14 @@ class _ChessBoardPainter extends CustomPainter {
   final bool blackSideAtBottom;
   final Map<String, Piece?> squares;
   final _DragAndDropDetails? dragAndDropDetails;
+  final (int, int)? tapStart;
   final BoardArrow? arrow;
 
   _ChessBoardPainter({
     required this.colors,
     required this.blackSideAtBottom,
     required this.squares,
+    required this.tapStart,
     required this.dragAndDropDetails,
     required this.arrow,
   });
@@ -573,10 +636,12 @@ class _ChessBoardPainter extends CustomPainter {
         final isDndIndicatorSquare = dragAndDropDetails != null &&
                 dragAndDropDetails?.endCell.$1 == file ||
             dragAndDropDetails?.endCell.$2 == rank;
+        final isTapStartCell = tapStart?.$1 == file && tapStart?.$2 == rank;
 
         if (isDndIndicatorSquare) paint.color = colors.dndIndicatorColor;
         if (isStartSquare) paint.color = colors.startSquareColor;
         if (isEndSquare) paint.color = colors.endSquareColor;
+        if (isTapStartCell) paint.color = colors.startSquareColor;
 
         canvas.drawRect(rect, paint);
       }

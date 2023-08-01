@@ -365,6 +365,14 @@ class _ChessboardState extends State<_Chessboard> {
     super.initState();
   }
 
+  @override
+  void didUpdateWidget(_Chessboard oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    setState(() {
+      _squares = getSquares(widget.fen);
+    });
+  }
+
   Future<void> _handleTapDown(TapDownDetails details) async {
     final position = details.localPosition;
     final cellsSize = widget.size / 8;

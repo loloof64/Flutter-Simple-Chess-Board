@@ -1,3 +1,8 @@
+## 1.2.0
+
+* Bug fix : the board was not always updated
+* Removed the use of package fpdart.
+
 ## 1.0.0
 
 * Wrote the chess board from scratch

@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:simple_chess_board/models/board_arrow.dart';
 import 'package:chess/chess.dart' as chesslib;
-import 'package:fpdart/fpdart.dart' as fp;
 import 'package:simple_chess_board/simple_chess_board.dart';
 
 void main() {
@@ -56,7 +55,7 @@ class _MyHomePageState extends State<MyHomePage> {
     final success = _chess.move(<String, String?>{
       'from': move.from,
       'to': move.to,
-      'promotion': move.promotion.toNullable()?.name,
+      'promotion': move.promotion?.name,
     });
     if (success) {
       setState(() {
@@ -129,7 +128,7 @@ class _MyHomePageState extends State<MyHomePage> {
               required ShortMove moveDone,
               required PieceType pieceType,
             }) {
-              moveDone.promotion = fp.Some(pieceType);
+              moveDone.promotion = pieceType;
               tryMakingMove(move: moveDone);
             }),
       ),

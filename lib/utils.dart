@@ -1,6 +1,5 @@
 import 'package:chess/chess.dart' as ch;
 
-import 'models/piece_type.dart';
 import 'models/short_move.dart';
 
 bool isPromoting(String fen, ShortMove move) {
@@ -25,7 +24,3 @@ bool isPromoting(String fen, ShortMove move) {
       .map((it) => it["to"])
       .contains(move.to);
 }
-
-Future<PieceType?> defaultPromoting() => Future.value(PieceType.queen);
-
-void defaultPromotionCommitedHandler({required ShortMove moveDone}) => {};

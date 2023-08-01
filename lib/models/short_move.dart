@@ -5,7 +5,7 @@ import 'piece_type.dart';
 class ShortMove {
   final String from;
   final String to;
-  final Option<PieceType> promotion;
+  Option<PieceType> promotion;
 
   ShortMove({
     required this.from,

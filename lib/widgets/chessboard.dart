@@ -4,8 +4,8 @@ import 'dart:math';
 
 import 'package:flutter/material.dart';
 import 'package:chess/chess.dart' as chess;
-import 'package:fpdart/fpdart.dart' as fpdart;
 import 'package:simple_chess_board/models/piece.dart';
+import 'package:simple_chess_board/utils.dart';
 import 'package:simple_chess_board/widgets/chess_vectors_definitions.dart';
 import '../models/piece_type.dart';
 import '../models/board_arrow.dart';
@@ -89,7 +89,10 @@ class SimpleChessBoard extends StatelessWidget {
   final Future<PieceType?> Function() onPromote;
 
   /// Handler for when a promotion has been commited on the board.
-  final void Function({required ShortMove moveDone}) onPromotionCommited;
+  final void Function({
+    required ShortMove moveDone,
+    required PieceType pieceType,
+  }) onPromotionCommited;
 
   /// Does the border with coordinates and player turn must be visible ?
   final bool showCoordinatesZone;
@@ -198,6 +201,8 @@ class SimpleChessBoard extends StatelessWidget {
               blackSideAtBottom: blackSideAtBottom,
               boardColors: chessBoardColors,
               processMove: _processMove,
+              onPromote: onPromote,
+              onPromotionCommited: onPromotionCommited,
               arrow: (lastMoveToHighlight != null)
                   ? BoardArrow(
                       from: lastMoveToHighlight!.from,
@@ -328,6 +333,11 @@ class _Chessboard extends StatefulWidget {
   final String fen;
   final BoardArrow? arrow;
   final void Function(ShortMove move) processMove;
+  final Future<PieceType?> Function() onPromote;
+  final void Function({
+    required ShortMove moveDone,
+    required PieceType pieceType,
+  }) onPromotionCommited;
 
   const _Chessboard({
     required this.fen,
@@ -336,6 +346,8 @@ class _Chessboard extends StatefulWidget {
     required this.blackSideAtBottom,
     required this.processMove,
     required this.arrow,
+    required this.onPromote,
+    required this.onPromotionCommited,
   });
 
   @override
@@ -395,13 +407,34 @@ class _ChessboardState extends State<_Chessboard> {
     });
   }
 
-  void _handlePanEnd(DragEndDetails details) {
+  Future<void> _handlePanEnd(DragEndDetails details) async {
     if (_dndDetails == null) return;
     final from = coordinatesToSquareName(
         _dndDetails!.startCell.$1, _dndDetails!.startCell.$2);
     final to = coordinatesToSquareName(
         _dndDetails!.endCell.$1, _dndDetails!.endCell.$2);
     final move = ShortMove(from: from, to: to);
+
+    if (isPromoting(widget.fen, move)) {
+      final selectedPiece = await widget.onPromote();
+      if (selectedPiece != null) {
+        widget.onPromotionCommited(
+          moveDone: move,
+          pieceType: selectedPiece,
+        );
+        Future.delayed(
+          const Duration(milliseconds: 35),
+          () => setState(
+            () => _squares = getSquares(widget.fen),
+          ),
+        );
+      }
+      setState(() {
+        _dndDetails = null;
+      });
+      return;
+    }
+
     widget.processMove(move);
     setState(() {
       _dndDetails = null;
@@ -443,69 +476,6 @@ class _ChessboardState extends State<_Chessboard> {
       ),
     );
   }
-
-/* todo remove
-  Color? _getHighlight(Square square) {
-    final temp = clickMove
-        .filter((t) => t.square == square.name)
-        .map((_) => widget.board.boardColors.selectionHighlightColor);
-    return temp.isSome()
-        ? temp.toNullable()
-        : Option.fromPredicate(
-            widget.board.boardColors.lastMoveArrowColor,
-            (_) => widget.board.lastMove.contains(square.name),
-          ).toNullable();
-  }
-  */
-
-/* todo remove
-  void _handleDrop(ShortMove move) {
-    widget.board.makeMove(move).then((_) {
-      _clearClickMove();
-    });
-  }
-  */
-
-/* todo remove
-  void _handleClick(HalfMove halfMove) {
-    if (clickMove.isSome()) {
-      final t = clickMove.toNullable();
-      final sameSquare = t?.square == halfMove.square;
-      final sameColorPiece = t?.piece
-              .map2<Piece, bool>(halfMove.piece, (t, r) => t.color == r.color)
-              .toNullable() ??
-          false;
-
-      if (sameSquare) {
-        _clearClickMove();
-      } else if (sameColorPiece) {
-        _setClickMove(halfMove);
-      } else {
-        widget.board.makeMove(ShortMove(
-          from: t?.square ?? '',
-          to: halfMove.square,
-        ));
-        _clearClickMove();
-      }
-    } else {
-      _setClickMove(halfMove);
-    }
-  }
-  */
-
-/* todo remove
-  void _setClickMove(HalfMove halfMove) {
-    setState(() {
-      clickMove = Option.of(halfMove).flatMap((t) => t.piece.map((_) => t));
-    });
-  }
-
-  void _clearClickMove() {
-    setState(() {
-      clickMove = const Option.none();
-    });
-  }
-  */
 }
 
 Map<String, Piece?> getSquares(String fen) {
@@ -794,141 +764,3 @@ class _ChessBoardPainter extends CustomPainter {
 /*
 Adapted from https://www.codeproject.com/Questions/125049/Draw-an-arrow-with-big-cap */
 const files = ['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h'];
-
-class _ArrowPainter extends CustomPainter {
-  List<BoardArrow> arrows;
-  BoardColor orientation;
-  Color arrowsColor;
-
-  _ArrowPainter(this.arrows, this.orientation, this.arrowsColor);
-
-  @override
-  void paint(Canvas canvas, Size size) {
-    final blockSize = size.width / 8;
-    final halfBlockSize = blockSize / 2;
-    final arrowMultiplier = blockSize * 0.1;
-
-    for (var arrow in arrows) {
-      final startFile = files.indexOf(arrow.from[0]);
-      final startRank = int.parse(arrow.from[1]) - 1;
-      final endFile = files.indexOf(arrow.to[0]);
-      final endRank = int.parse(arrow.to[1]) - 1;
-
-      int effectiveRowStart = 0;
-      int effectiveColumnStart = 0;
-      int effectiveRowEnd = 0;
-      int effectiveColumnEnd = 0;
-
-      if (orientation == BoardColor.black) {
-        effectiveColumnStart = 7 - startFile;
-        effectiveColumnEnd = 7 - endFile;
-        effectiveRowStart = startRank;
-        effectiveRowEnd = endRank;
-      } else {
-        effectiveColumnStart = startFile;
-        effectiveColumnEnd = endFile;
-        effectiveRowStart = 7 - startRank;
-        effectiveRowEnd = 7 - endRank;
-      }
-
-      final startOffset = Offset(
-          ((effectiveColumnStart + 1) * blockSize) - halfBlockSize,
-          ((effectiveRowStart + 1) * blockSize) - halfBlockSize);
-      final endOffset = Offset(
-          ((effectiveColumnEnd + 1) * blockSize) - halfBlockSize,
-          ((effectiveRowEnd + 1) * blockSize) - halfBlockSize);
-
-      final yDist = endOffset.dy - startOffset.dy;
-      final xDist = endOffset.dx - startOffset.dx;
-
-      final paint = Paint()
-        ..strokeWidth = halfBlockSize * 0.150
-        ..color = arrowsColor;
-
-      canvas.drawLine(startOffset,
-          Offset(startOffset.dx + xDist, startOffset.dy + yDist), paint);
-
-      var arrowPoint = endOffset;
-      double arrowLength = sqrt(
-        pow((startOffset.dx - endOffset.dx).abs(), 2) +
-            pow((startOffset.dy - endOffset.dy).abs(), 2),
-      );
-      double arrowAngle = atan2(
-        (startOffset.dy - endOffset.dy).abs(),
-        (startOffset.dx - endOffset.dx).abs(),
-      );
-
-      double pointX, pointY;
-      if (startOffset.dx > endOffset.dx) {
-        pointX = startOffset.dx -
-            (cos(arrowAngle) * (arrowLength - (3 * arrowMultiplier)));
-      } else {
-        pointX = cos(arrowAngle) * (arrowLength - (3 * arrowMultiplier)) +
-            startOffset.dx;
-      }
-
-      if (startOffset.dy > endOffset.dy) {
-        pointY = startOffset.dy -
-            (sin(arrowAngle) * (arrowLength - (3 * arrowMultiplier)));
-      } else {
-        pointY = (sin(arrowAngle) * (arrowLength - (3 * arrowMultiplier))) +
-            startOffset.dy;
-      }
-
-      Offset arrowPointBack = Offset(pointX, pointY);
-
-      double angleB =
-          atan2((3 * arrowMultiplier), (arrowLength - (3 * arrowMultiplier)));
-
-      double angleC =
-          pi * (90 - (arrowAngle * (180 / pi)) - (angleB * (180 / pi))) / 180;
-
-      double secondaryLength = (3 * arrowMultiplier) / sin(angleB);
-
-      if (startOffset.dx > endOffset.dx) {
-        pointX = startOffset.dx - (sin(angleC) * secondaryLength);
-      } else {
-        pointX = (sin(angleC) * secondaryLength) + startOffset.dx;
-      }
-
-      if (startOffset.dy > endOffset.dy) {
-        pointY = startOffset.dy - (cos(angleC) * secondaryLength);
-      } else {
-        pointY = (cos(angleC) * secondaryLength) + startOffset.dy;
-      }
-
-      Offset arrowPointLeft = Offset(pointX, pointY);
-      angleC = arrowAngle - angleB;
-
-      if (startOffset.dx > endOffset.dx) {
-        pointX = startOffset.dx - (cos(angleC) * secondaryLength);
-      } else {
-        pointX = (cos(angleC) * secondaryLength) + startOffset.dx;
-      }
-
-      if (startOffset.dy > endOffset.dy) {
-        pointY = startOffset.dy - (sin(angleC) * secondaryLength);
-      } else {
-        pointY = (sin(angleC) * secondaryLength) + startOffset.dy;
-      }
-
-      Offset arrowPointRight = Offset(pointX, pointY);
-
-      Path path = Path();
-      path.moveTo(arrowPoint.dx, arrowPoint.dy);
-      path.lineTo(arrowPointLeft.dx, arrowPointLeft.dy);
-      path.lineTo(arrowPointBack.dx, arrowPointBack.dy);
-      path.lineTo(arrowPointRight.dx, arrowPointRight.dy);
-
-      canvas.drawPath(
-        path,
-        paint..style = PaintingStyle.fill,
-      );
-    }
-  }
-
-  @override
-  bool shouldRepaint(_ArrowPainter oldDelegate) {
-    return arrows != oldDelegate.arrows;
-  }
-}

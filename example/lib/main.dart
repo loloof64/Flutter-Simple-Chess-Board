@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:simple_chess_board/models/board_arrow.dart';
 import 'package:chess/chess.dart' as chesslib;
+import 'package:fpdart/fpdart.dart' as fp;
 import 'package:simple_chess_board/simple_chess_board.dart';
 
 void main() {
@@ -115,18 +116,22 @@ class _MyHomePageState extends State<MyHomePage> {
       ),
       body: Center(
         child: SimpleChessBoard(
-          chessBoardColors: _boardColors,
-          engineThinking: false,
-          fen: _chess.fen,
-          onMove: tryMakingMove,
-          blackSideAtBottom: true,
-          whitePlayerType: PlayerType.human,
-          blackPlayerType: PlayerType.human,
-          lastMoveToHighlight: _lastMoveArrowCoordinates,
-          onPromote: () => handlePromotion(context),
-          onPromotionCommited: ({required ShortMove moveDone}) =>
-              {print(moveDone)},
-        ),
+            chessBoardColors: _boardColors,
+            engineThinking: false,
+            fen: _chess.fen,
+            onMove: tryMakingMove,
+            blackSideAtBottom: _blackAtBottom,
+            whitePlayerType: PlayerType.human,
+            blackPlayerType: PlayerType.human,
+            lastMoveToHighlight: _lastMoveArrowCoordinates,
+            onPromote: () => handlePromotion(context),
+            onPromotionCommited: ({
+              required ShortMove moveDone,
+              required PieceType pieceType,
+            }) {
+              moveDone.promotion = fp.Some(pieceType);
+              tryMakingMove(move: moveDone);
+            }),
       ),
     );
   }

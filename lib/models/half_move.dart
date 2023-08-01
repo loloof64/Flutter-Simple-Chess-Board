@@ -1,10 +1,8 @@
-import 'package:fpdart/fpdart.dart';
-
 import 'piece.dart';
 
 class HalfMove {
   final String square;
-  final Option<Piece> piece;
+  final Piece? piece;
 
   HalfMove(this.square, this.piece);
 

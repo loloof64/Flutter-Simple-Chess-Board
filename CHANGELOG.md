@@ -1,4 +1,4 @@
-## 1.2.0
+## 1.1.0
 
 * Bug fix : the board was not always updated
 * Removed the use of package fpdart.

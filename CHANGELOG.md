@@ -1,3 +1,8 @@
+## 1.0.0
+
+* Wrote the chess board from scratch
+* You can see an indicator on the chess board when doing a Drag and drop.
+
 ## 0.10.0
 
 * The callback onPromotionCommited gives us a ShortMove instance instead of just PieceType.

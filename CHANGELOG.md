@@ -1,3 +1,8 @@
+## 1.2.0
+
+* No more depending on fpdart, even in pubspecs.lock : this package won't affect your use
+of package fpdart in your project.
+
 ## 1.1.0
 
 * Bug fix : the board was not always updated

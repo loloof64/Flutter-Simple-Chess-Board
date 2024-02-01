@@ -373,6 +373,7 @@ class _ChessboardState extends State<_Chessboard> {
     });
   }
 
+/*
   Future<void> _handleTapDown(TapDownDetails details) async {
     final position = details.localPosition;
     final cellsSize = widget.size / 8;
@@ -434,6 +435,7 @@ class _ChessboardState extends State<_Chessboard> {
       }
     }
   }
+  */
 
   void _handlePanStart(DragStartDetails details) {
     if (_tapStart != null) return;
@@ -533,7 +535,7 @@ class _ChessboardState extends State<_Chessboard> {
   @override
   Widget build(BuildContext context) {
     return GestureDetector(
-      onTapDown: _handleTapDown,
+      //onTapDown: _handleTapDown,
       onPanStart: _handlePanStart,
       onPanUpdate: _handlePanUpdate,
       onPanEnd: _handlePanEnd,

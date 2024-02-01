@@ -1,3 +1,7 @@
+## 1.3.0
+
+* Now the only way to interact with the board is with Drag and Drop.
+
 ## 1.2.0
 
 * No more depending on fpdart, even in pubspecs.lock : this package won't affect your use
@@ -17,15 +21,15 @@ of package fpdart in your project.
 
 * The callback onPromotionCommited gives us a ShortMove instance instead of just PieceType.
 
-## 0.9.0
+## 0.9.0
 
 * The callback onPromotionCommited is now effective.
 
-## 0.8.0
+## 0.8.0
 
 * We must add a new callback to the ChessBoard : onPromotionCommited.
 
-## 0.7.0
+## 0.7.0
 
 * We can change colors.
 

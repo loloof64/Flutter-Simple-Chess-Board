@@ -1,3 +1,7 @@
+## 1.4.1
+
+* Update README file.
+
 ## 1.4.0
 
 * We can choose to highlight some cells, with the parameter `cellHighlights`.

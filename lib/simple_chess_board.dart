@@ -1,4 +1,4 @@
-library simple_chess_board;
+library;
 
 export 'widgets/chessboard.dart';
 export 'models/board_color.dart';

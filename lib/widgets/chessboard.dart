@@ -1,4 +1,4 @@
-library flutter_chessboard;
+library;
 
 import 'dart:math';
 
@@ -94,6 +94,11 @@ class SimpleChessBoard extends StatelessWidget {
     required PieceType pieceType,
   }) onPromotionCommited;
 
+  /// Handler for when a cell is tapped.
+  final void Function({
+    required String cellCoordinate,
+  }) onTap;
+
   /// Does the border with coordinates and player turn must be visible ?
   final bool showCoordinatesZone;
 
@@ -102,6 +107,9 @@ class SimpleChessBoard extends StatelessWidget {
 
   /// Must a circular progress bar be visible above of the board ?
   final bool engineThinking;
+
+  /// The cell highlighting colors.
+  final Map<String, Color> cellHighlights;
 
   /// Says if the player in turn is human.
   bool currentPlayerIsHuman() {
@@ -115,7 +123,7 @@ class SimpleChessBoard extends StatelessWidget {
 
   /// Constructor.
   const SimpleChessBoard({
-    Key? key,
+    super.key,
     required this.fen,
     this.blackSideAtBottom = false,
     required this.whitePlayerType,
@@ -123,11 +131,13 @@ class SimpleChessBoard extends StatelessWidget {
     required this.onMove,
     required this.onPromote,
     required this.onPromotionCommited,
+    required this.onTap,
     required this.chessBoardColors,
+    required this.cellHighlights,
     this.engineThinking = false,
     this.showCoordinatesZone = true,
     this.lastMoveToHighlight,
-  }) : super(key: key);
+  });
 
   void _processMove(ShortMove move) {
     if (currentPlayerIsHuman()) {
@@ -203,12 +213,14 @@ class SimpleChessBoard extends StatelessWidget {
               processMove: _processMove,
               onPromote: onPromote,
               onPromotionCommited: onPromotionCommited,
+              onTap: onTap,
               arrow: (lastMoveToHighlight != null)
                   ? BoardArrow(
                       from: lastMoveToHighlight!.from,
                       to: lastMoveToHighlight!.to,
                     )
                   : null,
+              cellHighlights: cellHighlights,
             ),
             if (engineThinking)
               SizedBox(
@@ -249,8 +261,7 @@ class _PlayerTurn extends StatelessWidget {
   final double size;
   final bool whiteTurn;
 
-  const _PlayerTurn({Key? key, required this.size, required this.whiteTurn})
-      : super(key: key);
+  const _PlayerTurn({required this.size, required this.whiteTurn});
 
   @override
   Widget build(BuildContext context) {
@@ -332,12 +343,16 @@ class _Chessboard extends StatefulWidget {
   final bool blackSideAtBottom;
   final String fen;
   final BoardArrow? arrow;
+  final Map<String, Color> cellHighlights;
   final void Function(ShortMove move) processMove;
   final Future<PieceType?> Function() onPromote;
   final void Function({
     required ShortMove moveDone,
     required PieceType pieceType,
   }) onPromotionCommited;
+  final void Function({
+    required String cellCoordinate,
+  }) onTap;
 
   const _Chessboard({
     required this.fen,
@@ -346,8 +361,10 @@ class _Chessboard extends StatefulWidget {
     required this.blackSideAtBottom,
     required this.processMove,
     required this.arrow,
+    required this.cellHighlights,
     required this.onPromote,
     required this.onPromotionCommited,
+    required this.onTap,
   });
 
   @override
@@ -372,70 +389,6 @@ class _ChessboardState extends State<_Chessboard> {
       _squares = getSquares(widget.fen);
     });
   }
-
-/*
-  Future<void> _handleTapDown(TapDownDetails details) async {
-    final position = details.localPosition;
-    final cellsSize = widget.size / 8;
-    final col = position.dx ~/ cellsSize;
-    final row = position.dy ~/ cellsSize;
-
-    final file = widget.blackSideAtBottom ? 7 - col : col;
-    final rank = widget.blackSideAtBottom ? row : 7 - row;
-
-    if (_tapStart == null) {
-      final squareName = coordinatesToSquareName(file, rank);
-      final piece = _squares[squareName];
-
-      if (piece == null) return;
-
-      final isWhiteTurn = widget.fen.split(" ")[1] == "w";
-
-      final isNotAPieceOfPlayerInTurn = isWhiteTurn
-          ? piece.color == BoardColor.black
-          : piece.color == BoardColor.white;
-
-      if (isNotAPieceOfPlayerInTurn) return;
-      setState(() {
-        _tapStart = (file, rank);
-      });
-    } else {
-      final from = coordinatesToSquareName(_tapStart!.$1, _tapStart!.$2);
-      final to = coordinatesToSquareName(file, rank);
-      final move = ShortMove(from: from, to: to);
-
-      if (isPromoting(widget.fen, move)) {
-        final selectedPiece = await widget.onPromote();
-        if (selectedPiece != null) {
-          widget.onPromotionCommited(
-            moveDone: move,
-            pieceType: selectedPiece,
-          );
-          Future.delayed(
-            const Duration(milliseconds: 35),
-            () => setState(
-              () => _squares = getSquares(widget.fen),
-            ),
-          );
-        }
-        setState(() {
-          _tapStart = null;
-        });
-      } else {
-        widget.processMove(move);
-        setState(() {
-          _tapStart = null;
-        });
-        Future.delayed(
-          const Duration(milliseconds: 35),
-          () => setState(
-            () => _squares = getSquares(widget.fen),
-          ),
-        );
-      }
-    }
-  }
-  */
 
   void _handlePanStart(DragStartDetails details) {
     if (_tapStart != null) return;
@@ -532,10 +485,30 @@ class _ChessboardState extends State<_Chessboard> {
     });
   }
 
+  void _handleTap(TapUpDetails details) {
+    final eventCoordinates = details.localPosition;
+
+    final eventX = eventCoordinates.dx;
+    final eventY = eventCoordinates.dy;
+
+    final cellSize = widget.size / 8;
+
+    final col = (eventX / cellSize).floor();
+    final row = (eventY / cellSize).floor();
+
+    final file = (widget.blackSideAtBottom) ? 7 - col : col;
+    final rank = (widget.blackSideAtBottom) ? row : 7 - row;
+
+    final cellCoordinate = "${String.fromCharCode('a'.codeUnitAt(0) + file)}"
+        "${String.fromCharCode('1'.codeUnitAt(0) + rank)}";
+
+    widget.onTap(cellCoordinate: cellCoordinate);
+  }
+
   @override
   Widget build(BuildContext context) {
     return GestureDetector(
-      //onTapDown: _handleTapDown,
+      onTapUp: _handleTap,
       onPanStart: _handlePanStart,
       onPanUpdate: _handlePanUpdate,
       onPanEnd: _handlePanEnd,
@@ -548,6 +521,7 @@ class _ChessboardState extends State<_Chessboard> {
           dragAndDropDetails: _dndDetails,
           tapStart: _tapStart,
           arrow: widget.arrow,
+          cellHighlights: widget.cellHighlights,
         ),
         size: Size.square(widget.size),
         isComplex: true,
@@ -588,6 +562,7 @@ class _ChessBoardPainter extends CustomPainter {
   final _DragAndDropDetails? dragAndDropDetails;
   final (int, int)? tapStart;
   final BoardArrow? arrow;
+  final Map<String, Color> cellHighlights;
 
   _ChessBoardPainter({
     required this.colors,
@@ -596,6 +571,7 @@ class _ChessBoardPainter extends CustomPainter {
     required this.tapStart,
     required this.dragAndDropDetails,
     required this.arrow,
+    required this.cellHighlights,
   });
 
   @override
@@ -634,9 +610,13 @@ class _ChessBoardPainter extends CustomPainter {
           cellSize,
         );
 
+        final cellCoord = "${String.fromCharCode('a'.codeUnitAt(0) + file)}"
+            "${String.fromCharCode('1'.codeUnitAt(0) + rank)}";
+
         final paint = Paint()
           ..color =
               isWhiteCell ? colors.lightSquaresColor : colors.darkSquaresColor;
+        final highlightColor = cellHighlights[cellCoord];
         final isStartSquare = dragAndDropDetails != null &&
             dragAndDropDetails?.startCell.$1 == file &&
             dragAndDropDetails?.startCell.$2 == rank;
@@ -648,6 +628,7 @@ class _ChessBoardPainter extends CustomPainter {
             dragAndDropDetails?.endCell.$2 == rank;
         final isTapStartCell = tapStart?.$1 == file && tapStart?.$2 == rank;
 
+        if (highlightColor != null) paint.color = highlightColor;
         if (isDndIndicatorSquare) paint.color = colors.dndIndicatorColor;
         if (isStartSquare) paint.color = colors.startSquareColor;
         if (isEndSquare) paint.color = colors.endSquareColor;

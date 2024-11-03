@@ -1,3 +1,8 @@
+## 1.4.0
+
+* We can choose to highlight some cells, with the parameter `cellHighlights`.
+* Added an onTap handler, which is active on every cells.
+
 ## 1.3.0
 
 * Now the only way to interact with the board is with Drag and Drop.

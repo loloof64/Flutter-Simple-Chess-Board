@@ -13,6 +13,7 @@ class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
+      debugShowCheckedModeBanner: false,
       title: 'Simple chess board Demo',
       theme: ThemeData(
         primarySwatch: Colors.blue,
@@ -36,6 +37,7 @@ class _MyHomePageState extends State<MyHomePage> {
   var _blackAtBottom = false;
   BoardArrow? _lastMoveArrowCoordinates;
   late ChessBoardColors _boardColors;
+  final _highlightCells = <String, Color>{};
 
   @override
   void initState() {
@@ -114,23 +116,44 @@ class _MyHomePageState extends State<MyHomePage> {
         ],
       ),
       body: Center(
-        child: SimpleChessBoard(
-            chessBoardColors: _boardColors,
-            engineThinking: false,
-            fen: _chess.fen,
-            onMove: tryMakingMove,
-            blackSideAtBottom: _blackAtBottom,
-            whitePlayerType: PlayerType.human,
-            blackPlayerType: PlayerType.human,
-            lastMoveToHighlight: _lastMoveArrowCoordinates,
-            onPromote: () => handlePromotion(context),
-            onPromotionCommited: ({
-              required ShortMove moveDone,
-              required PieceType pieceType,
-            }) {
-              moveDone.promotion = pieceType;
-              tryMakingMove(move: moveDone);
-            }),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          crossAxisAlignment: CrossAxisAlignment.center,
+          children: [
+            Expanded(
+              child: SimpleChessBoard(
+                chessBoardColors: _boardColors,
+                engineThinking: false,
+                fen: _chess.fen,
+                onMove: tryMakingMove,
+                blackSideAtBottom: _blackAtBottom,
+                whitePlayerType: PlayerType.human,
+                blackPlayerType: PlayerType.human,
+                lastMoveToHighlight: _lastMoveArrowCoordinates,
+                cellHighlights: _highlightCells,
+                onPromote: () => handlePromotion(context),
+                onPromotionCommited: ({
+                  required ShortMove moveDone,
+                  required PieceType pieceType,
+                }) {
+                  moveDone.promotion = pieceType;
+                  tryMakingMove(move: moveDone);
+                },
+                onTap: ({required String cellCoordinate}) {
+                  if (_highlightCells[cellCoordinate] == null) {
+                    _highlightCells[cellCoordinate] = Colors.red;
+                    setState(() {});
+                  } else {
+                    _highlightCells.remove(cellCoordinate);
+                    setState(() {});
+                  }
+                },
+              ),
+            ),
+            Text("Click on a cell in order to (un)highlight it."
+                " You can also drag and drop pieces")
+          ],
+        ),
       ),
     );
   }

@@ -1,3 +1,7 @@
+## 1.5.0
+
+* We can also highlight cell even if the player in turn is not set to human.
+
 ## 1.4.1
 
 * Update README file.

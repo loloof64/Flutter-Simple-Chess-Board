@@ -161,10 +161,6 @@ class SimpleChessBoard extends StatelessWidget {
         final size = constraints.maxWidth < constraints.maxHeight
             ? constraints.maxWidth
             : constraints.maxHeight;
-        final isWhiteTurn = fen.split(' ')[1] == 'w';
-        final humanTurn =
-            (isWhiteTurn && whitePlayerType == PlayerType.human) ||
-                (!isWhiteTurn && blackPlayerType == PlayerType.human);
         var boardSizeProportion = (showCoordinatesZone ? 0.9 : 1.0);
         return Stack(
           alignment: Alignment.center,
@@ -211,6 +207,8 @@ class SimpleChessBoard extends StatelessWidget {
               blackSideAtBottom: blackSideAtBottom,
               boardColors: chessBoardColors,
               processMove: _processMove,
+              whitePlayerType: whitePlayerType,
+              blackPlayerType: blackPlayerType,
               onPromote: onPromote,
               onPromotionCommited: onPromotionCommited,
               onTap: onTap,
@@ -230,12 +228,6 @@ class SimpleChessBoard extends StatelessWidget {
                   backgroundColor: chessBoardColors.circularProgressBarColor,
                   strokeWidth: 8,
                 ),
-              ),
-            if (!humanTurn)
-              SizedBox(
-                width: size,
-                height: size,
-                child: const Text(''),
               ),
           ],
         );
@@ -339,6 +331,8 @@ Iterable<Widget> getRanksCoordinates({
 
 class _Chessboard extends StatefulWidget {
   final ChessBoardColors boardColors;
+  final PlayerType whitePlayerType;
+  final PlayerType blackPlayerType;
   final double size;
   final bool blackSideAtBottom;
   final String fen;
@@ -356,6 +350,8 @@ class _Chessboard extends StatefulWidget {
 
   const _Chessboard({
     required this.fen,
+    required this.whitePlayerType,
+    required this.blackPlayerType,
     required this.size,
     required this.boardColors,
     required this.blackSideAtBottom,
@@ -391,6 +387,7 @@ class _ChessboardState extends State<_Chessboard> {
   }
 
   void _handlePanStart(DragStartDetails details) {
+    if (!_isHumanTurn()) return;
     if (_tapStart != null) return;
     final position = details.localPosition;
     final cellsSize = widget.size / 8;
@@ -503,6 +500,12 @@ class _ChessboardState extends State<_Chessboard> {
         "${String.fromCharCode('1'.codeUnitAt(0) + rank)}";
 
     widget.onTap(cellCoordinate: cellCoordinate);
+  }
+
+  bool _isHumanTurn() {
+    final isWhiteTurn = widget.fen.split(' ')[1] == 'w';
+    return (isWhiteTurn && widget.whitePlayerType == PlayerType.human) ||
+        (!isWhiteTurn && widget.blackPlayerType == PlayerType.human);
   }
 
   @override

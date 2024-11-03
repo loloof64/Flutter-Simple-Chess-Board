@@ -25,7 +25,8 @@ A simple chess board, where:
 * you can choose the orientation of the board (are Blacks at bottom ?),
 * you can add arrows,
 * you can choose colors,
-* the common size will be the least of attributed width/height : if width > height => takes the allocated height, and the reverse if width < height (so for example, if you use it in a Row/Column, you can set the stretch alignment in the cross axis direction for a quite good layout/effect).
+* the common size will be the least of attributed width/height : if width > height => takes the allocated height, and the reverse if width < height (so for example, if you use it in a Row/Column, you can set the stretch alignment in the cross axis direction for a quite good layout/effect),
+* you can highlights some square, from the color you want.
 
 If you want to implement game logic, you can use the [chess](https://pub.dev/packages/chess) package.
 
@@ -38,8 +39,6 @@ To use SimpleChessBoard widget, add [simple_chess_board](https://pub.dev/package
 ## Usage
 
 You can find a longer example in the `example` folder.
-
-There's also a live example on [Zap](https://zapp.run/edit/simple-chess-boad-z62a06g862b0?file=lib/main.dart).
 
 ### Simple example
 
@@ -61,6 +60,7 @@ SimpleChessBoard(
 ### Handling promotion
 
 You handle promotion in the function you give to the mandatory `onPromote` parameter. In this function you return the `PieceType` you want to use.
+You can also be notified if the promotion has been set, by using `onPromotionCommited` function.
 
 As an example:
 

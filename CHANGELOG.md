@@ -1,3 +1,7 @@
+## 1.6.0
+
+* We can set up illegal position on the board (useful if you don't plan to make it interactive)
+
 ## 1.5.0
 
 * We can also highlight cell even if the player in turn is not set to human.

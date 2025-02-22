@@ -126,7 +126,7 @@ abstract class VectorDrawableElement {
       Canvas targetCanvas, DrawingParameters? parentDrawingParameters);
 }
 
-/// A Vector path element (<path>).
+/// A Vector path element (path).
 class VectorImagePathDefinition extends VectorDrawableElement {
   /// Elements of this path
   List<PathElement> pathElements;
@@ -186,7 +186,7 @@ class VectorImagePathDefinition extends VectorDrawableElement {
   }
 }
 
-/// Transform a path definition (value of 'd' attribute in SVG <path> tag) into
+/// Transform a path definition (value of 'd' attribute in SVG path tag) into
 /// a List of PathElement.
 List<PathElement> parsePath(String pathStr) {
   interpretCommand(RegExp commandRegex, String input) {
@@ -523,7 +523,7 @@ class VectorCircle extends VectorDrawableElement {
   }
 }
 
-/// A Vector group element (<g>).
+/// A Vector group element (g).
 class VectorImageGroup extends VectorDrawableElement {
   /// Children elements of this Group
   List<VectorDrawableElement>? children;

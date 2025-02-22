@@ -1,6 +1,6 @@
 name: simple_chess_board
 description: A simple chess board widget which do not handle game state, but with several options for board orientation, adding arrows, and others.
-version: 1.5.0
+version: 1.6.0
 repository: https://github.com/loloof64/Flutter-Simple-Chess-Board
 
 environment:

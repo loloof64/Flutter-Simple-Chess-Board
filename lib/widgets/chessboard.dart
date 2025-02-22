@@ -535,7 +535,10 @@ class _ChessboardState extends State<_Chessboard> {
 }
 
 Map<String, Piece?> getSquares(String fen) {
-  final boardLogic = chess.Chess.fromFEN(fen);
+  final boardLogic = chess.Chess.fromFEN(
+    fen,
+    check_validity: false,
+  );
   final result = <String, Piece?>{};
   for (final squareName in chess.Chess.SQUARES.keys) {
     final tempValue = boardLogic.get(squareName);

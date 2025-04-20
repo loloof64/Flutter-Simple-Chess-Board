@@ -1,3 +1,7 @@
+## 1.7.0
+
+* We can highlight cell with an opacity (we just need to set the opacity to the color).
+
 ## 1.6.0
 
 * We can set up illegal position on the board (useful if you don't plan to make it interactive)

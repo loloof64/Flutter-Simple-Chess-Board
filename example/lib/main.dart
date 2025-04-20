@@ -141,7 +141,7 @@ class _MyHomePageState extends State<MyHomePage> {
                 },
                 onTap: ({required String cellCoordinate}) {
                   if (_highlightCells[cellCoordinate] == null) {
-                    _highlightCells[cellCoordinate] = Colors.red;
+                    _highlightCells[cellCoordinate] = Colors.red.withAlpha(70);
                     setState(() {});
                   } else {
                     _highlightCells.remove(cellCoordinate);

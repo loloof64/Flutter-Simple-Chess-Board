@@ -634,13 +634,15 @@ class _ChessBoardPainter extends CustomPainter {
             dragAndDropDetails?.endCell.$2 == rank;
         final isTapStartCell = tapStart?.$1 == file && tapStart?.$2 == rank;
 
-        if (highlightColor != null) paint.color = highlightColor;
         if (isDndIndicatorSquare) paint.color = colors.dndIndicatorColor;
         if (isStartSquare) paint.color = colors.startSquareColor;
         if (isEndSquare) paint.color = colors.endSquareColor;
         if (isTapStartCell) paint.color = colors.startSquareColor;
 
         canvas.drawRect(rect, paint);
+        if (highlightColor != null) {
+          canvas.drawRect(rect, Paint()..color = highlightColor);
+        }
       }
     }
   }

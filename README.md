@@ -1,14 +1,14 @@
-<!-- 
+<!--
 This README describes the package. If you publish this package to pub.dev,
 this README's contents appear on the landing page for your package.
 
 For information about how to write a good package README, see the guide for
-[writing package pages](https://dart.dev/guides/libraries/writing-package-pages). 
+[writing package pages](https://dart.dev/guides/libraries/writing-package-pages).
 
 For general information about developing packages, see the Dart guide for
 [creating packages](https://dart.dev/guides/libraries/create-library-packages)
 and the Flutter guide for
-[developing packages and plugins](https://flutter.dev/developing-packages). 
+[developing packages and plugins](https://flutter.dev/developing-packages).
 -->
 
 A simple chess board widget, with several options.
@@ -18,15 +18,16 @@ A simple chess board widget, with several options.
 ![Example usage](https://github.com/loloof64/Flutter-Simple-Chess-Board/blob/main/simple_chess_board.png#400)
 
 A simple chess board, where:
-* you can configure the current position,
-* you can configure each side type (e.g : we can drag pieces for white side, but block them for black side if we want to make an external engine move),
-* you can show coordinates and player turn around the board,
-* you define your own widget for processing with promotion piece selection,
-* you can choose the orientation of the board (are Blacks at bottom ?),
-* you can add arrows,
-* you can choose colors,
-* the common size will be the least of attributed width/height : if width > height => takes the allocated height, and the reverse if width < height (so for example, if you use it in a Row/Column, you can set the stretch alignment in the cross axis direction for a quite good layout/effect),
-* you can highlights some square, from the color you want.
+
+- you can configure the current position,
+- you can configure each side type (e.g : we can drag pieces for white side, but block them for black side if we want to make an external engine move),
+- you can show coordinates and player turn around the board,
+- you define your own widget for processing with promotion piece selection,
+- you can choose the orientation of the board (are Blacks at bottom ?),
+- you can add arrows,
+- you can choose colors,
+- the common size will be the least of attributed width/height : if width > height => takes the allocated height, and the reverse if width < height (so for example, if you use it in a Row/Column, you can set the stretch alignment in the cross axis direction for a quite good layout/effect),
+- you can highlights some square, from the color you want.
 
 If you want to implement game logic, you can use the [chess](https://pub.dev/packages/chess) package.
 
@@ -54,6 +55,47 @@ SimpleChessBoard(
     blackPlayerType: PlayerType.computer,
     lastMoveToHighlight: BoardArrow(from: 'e2', to: 'e4', color: Colors.blueAccent),
     onPromote: () => PieceType.queen,
+),
+```
+
+### Customizing colors
+
+```dart
+SimpleChessBoard(
+    chessBoardColors: ChessBoardColors()
+      ..lightSquaresColor = Colors.blue.shade200
+      ..darkSquaresColor = Colors.blue.shade600
+      ..coordinatesZoneColor = Colors.redAccent.shade200
+      ..lastMoveArrowColor = Colors.cyan
+      ..startSquareColor = Colors.orange
+      ..endSquareColor = Colors.green
+      ..circularProgressBarColor = Colors.red
+      ..coordinatesColor = Colors.green,
+    engineThinking: false,
+    fen: _chess.fen,
+    onMove: tryMakingMove,
+    blackSideAtBottom: _blackAtBottom,
+    whitePlayerType: PlayerType.human,
+    blackPlayerType: PlayerType.human,
+    lastMoveToHighlight: _lastMoveArrowCoordinates,
+    cellHighlights: _highlightCells,
+    onPromote: () => handlePromotion(context),
+    onPromotionCommited: ({
+        required ShortMove moveDone,
+        required PieceType pieceType,
+    }) {
+        moveDone.promotion = pieceType;
+        tryMakingMove(move: moveDone);
+    },
+    onTap: ({required String cellCoordinate}) {
+        if (_highlightCells[cellCoordinate] == null) {
+        _highlightCells[cellCoordinate] = Colors.red.withAlpha(70);
+        setState(() {});
+        } else {
+        _highlightCells.remove(cellCoordinate);
+        setState(() {});
+        }
+    },
 ),
 ```
 
@@ -111,15 +153,15 @@ SimpleChessBoard(
 
 ### Parameters
 
-* fen : board position in [Forsyth-Edwards Notation](https://en.wikipedia.org/wiki/Forsyth%E2%80%93Edwards_Notation). Example : `rnbqkbnr/pppppppp/8/8/4P3/8/PPPP1PPP/RNBQKBNR b KQkq e3 0 1`.
-* orientation: says if Black side is at bottom or not. Give `BoardColor.black` if Blacks must be at bottom of the board, or `BoardColor.white` otherwise.
-* whitePlayerType : if it is white turn and this is set to `PlayerType.human`, then the user will be able to move pieces. Either with the click method, or with the drag and drop method. Otherwise, if set to `PlayerType.computer` and it is white turn, then the user won't be able to move pieces.
-* blackPlayerType : if it is black turn and this is set to `PlayerType.human`, then the user will be able to move pieces. Either with the click method, or with the drag and drop method. Otherwise, if set to `PlayerType.computer` and it is black turn, then the user won't be able to move pieces.
-* onMove : the given function will be called whenever a move is done on board by the user (if he's allowed to move pieces). It has a single `required` parameter `ShortMove move` which carries data about from/to cells, as well as promotion type which is nullable. **Notice that it's up to you to update the board or not based on the move you receive from this function.** You can use the [chess](https://pub.dev/packages/chess) package to get the new position.
-* onPromote: the given function is called whenever a promotion move is done on board by the user (if he's allowed to move pieces). You must return a `Future<PieceType?>`. The `Future` can wrap a `null` value in order to cancel. Otherwise, wrap a `PieceType` such as `PieceType.queen`.
-* showCoordinatesZone (optionnal) : says if you want to show coordinates and player turn around the board. Give `true` for showing it, or `false` for removing it.
-* lastMoveToHighlight (optionnal) : give data about the arrow to draw on the board, if any. You pass a `BoardArrow` with from/to cells `String` and color `Color` (such as `BoardArrow(from: 'e2', to: 'e4', color: Colors.blueAccent)`) if you want to draw an arrow, or `null` if you don't want any arrow on the board.
-* engineThinking (optionnal) : says if you want to show a `CircularProgressBar` in order to indicate that an engine is trying to compute next move for example.
+- fen : board position in [Forsyth-Edwards Notation](https://en.wikipedia.org/wiki/Forsyth%E2%80%93Edwards_Notation). Example : `rnbqkbnr/pppppppp/8/8/4P3/8/PPPP1PPP/RNBQKBNR b KQkq e3 0 1`.
+- orientation: says if Black side is at bottom or not. Give `BoardColor.black` if Blacks must be at bottom of the board, or `BoardColor.white` otherwise.
+- whitePlayerType : if it is white turn and this is set to `PlayerType.human`, then the user will be able to move pieces. Either with the click method, or with the drag and drop method. Otherwise, if set to `PlayerType.computer` and it is white turn, then the user won't be able to move pieces.
+- blackPlayerType : if it is black turn and this is set to `PlayerType.human`, then the user will be able to move pieces. Either with the click method, or with the drag and drop method. Otherwise, if set to `PlayerType.computer` and it is black turn, then the user won't be able to move pieces.
+- onMove : the given function will be called whenever a move is done on board by the user (if he's allowed to move pieces). It has a single `required` parameter `ShortMove move` which carries data about from/to cells, as well as promotion type which is nullable. **Notice that it's up to you to update the board or not based on the move you receive from this function.** You can use the [chess](https://pub.dev/packages/chess) package to get the new position.
+- onPromote: the given function is called whenever a promotion move is done on board by the user (if he's allowed to move pieces). You must return a `Future<PieceType?>`. The `Future` can wrap a `null` value in order to cancel. Otherwise, wrap a `PieceType` such as `PieceType.queen`.
+- showCoordinatesZone (optionnal) : says if you want to show coordinates and player turn around the board. Give `true` for showing it, or `false` for removing it.
+- lastMoveToHighlight (optionnal) : give data about the arrow to draw on the board, if any. You pass a `BoardArrow` with from/to cells `String` and color `Color` (such as `BoardArrow(from: 'e2', to: 'e4', color: Colors.blueAccent)`) if you want to draw an arrow, or `null` if you don't want any arrow on the board.
+- engineThinking (optionnal) : says if you want to show a `CircularProgressBar` in order to indicate that an engine is trying to compute next move for example.
 
 ## Project's repository
 
@@ -127,6 +169,6 @@ You can find the repository on [Github](https://github.com/loloof64/Flutter-Simp
 
 ## Credits
 
-* Using code from [Flutter Chess board](https://github.com/varunpvp/flutter_chessboard).
-* Using code from [Flutter Stateless Chess board](https://github.com/varunpvp/flutter_chessboard).
-* Using chess pieces definitions from [Wikimedia Commons](https://commons.wikimedia.org/wiki/Category:SVG_chess_pieces).
+- Using code from [Flutter Chess board](https://github.com/varunpvp/flutter_chessboard).
+- Using code from [Flutter Stateless Chess board](https://github.com/varunpvp/flutter_chessboard).
+- Using chess pieces definitions from [Wikimedia Commons](https://commons.wikimedia.org/wiki/Category:SVG_chess_pieces).

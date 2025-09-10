@@ -55,8 +55,8 @@ class ChessBoardColors {
   /// The color of the end square for drag and drop
   Color endSquareColor = Colors.green;
 
-  /// The color of the drag and drop indicator's cells.
-  Color dndIndicatorColor = Colors.purple;
+  /// Optional color for the drag and drop indicator's cells.
+  Color? dndIndicatorColor;
 
   /// Constructor.
   ChessBoardColors();
@@ -105,6 +105,9 @@ class SimpleChessBoard extends StatelessWidget {
   /// Last move arrow.
   final BoardArrow? lastMoveToHighlight;
 
+  /// Should the start and end squares be highlighted when showing last move arrow?
+  final bool highlightLastMoveSquares;
+
   /// Must a circular progress bar be visible above of the board ?
   final bool engineThinking;
 
@@ -137,6 +140,7 @@ class SimpleChessBoard extends StatelessWidget {
     this.engineThinking = false,
     this.showCoordinatesZone = true,
     this.lastMoveToHighlight,
+    this.highlightLastMoveSquares = false,
   });
 
   void _processMove(ShortMove move) {
@@ -212,6 +216,7 @@ class SimpleChessBoard extends StatelessWidget {
               onPromote: onPromote,
               onPromotionCommited: onPromotionCommited,
               onTap: onTap,
+              highlightLastMoveSquares: highlightLastMoveSquares,
               arrow: (lastMoveToHighlight != null)
                   ? BoardArrow(
                       from: lastMoveToHighlight!.from,
@@ -338,6 +343,7 @@ class _Chessboard extends StatefulWidget {
   final String fen;
   final BoardArrow? arrow;
   final Map<String, Color> cellHighlights;
+  final bool highlightLastMoveSquares;
   final void Function(ShortMove move) processMove;
   final Future<PieceType?> Function() onPromote;
   final void Function({
@@ -358,6 +364,7 @@ class _Chessboard extends StatefulWidget {
     required this.processMove,
     required this.arrow,
     required this.cellHighlights,
+    required this.highlightLastMoveSquares,
     required this.onPromote,
     required this.onPromotionCommited,
     required this.onTap,
@@ -525,6 +532,7 @@ class _ChessboardState extends State<_Chessboard> {
           tapStart: _tapStart,
           arrow: widget.arrow,
           cellHighlights: widget.cellHighlights,
+          highlightLastMoveSquares: widget.highlightLastMoveSquares,
         ),
         size: Size.square(widget.size),
         isComplex: true,
@@ -569,6 +577,7 @@ class _ChessBoardPainter extends CustomPainter {
   final (int, int)? tapStart;
   final BoardArrow? arrow;
   final Map<String, Color> cellHighlights;
+  final bool highlightLastMoveSquares;
 
   _ChessBoardPainter({
     required this.colors,
@@ -578,6 +587,7 @@ class _ChessBoardPainter extends CustomPainter {
     required this.dragAndDropDetails,
     required this.arrow,
     required this.cellHighlights,
+    required this.highlightLastMoveSquares,
   });
 
   @override
@@ -629,14 +639,28 @@ class _ChessBoardPainter extends CustomPainter {
         final isEndSquare = dragAndDropDetails != null &&
             dragAndDropDetails?.endCell.$1 == file &&
             dragAndDropDetails?.endCell.$2 == rank;
-        final isDndIndicatorSquare = dragAndDropDetails != null &&
-                dragAndDropDetails?.endCell.$1 == file ||
-            dragAndDropDetails?.endCell.$2 == rank;
         final isTapStartCell = tapStart?.$1 == file && tapStart?.$2 == rank;
 
-        if (isDndIndicatorSquare) paint.color = colors.dndIndicatorColor;
-        if (isStartSquare) paint.color = colors.startSquareColor;
-        if (isEndSquare) paint.color = colors.endSquareColor;
+        // Check if this square is the start or end of the last move arrow
+        final isLastMoveStartSquare = highlightLastMoveSquares &&
+            arrow != null &&
+            cellCoord == arrow!.from;
+        final isLastMoveEndSquare =
+            highlightLastMoveSquares && arrow != null && cellCoord == arrow!.to;
+
+        if (colors.dndIndicatorColor != null) {
+          final isDndIndicatorSquare = dragAndDropDetails != null &&
+              (dragAndDropDetails?.endCell.$1 == file ||
+                  dragAndDropDetails?.endCell.$2 == rank);
+          if (isDndIndicatorSquare) paint.color = colors.dndIndicatorColor!;
+        }
+
+        if (isStartSquare || isLastMoveStartSquare) {
+          paint.color = colors.startSquareColor;
+        }
+        if (isEndSquare || isLastMoveEndSquare) {
+          paint.color = colors.endSquareColor;
+        }
         if (isTapStartCell) paint.color = colors.startSquareColor;
 
         canvas.drawRect(rect, paint);

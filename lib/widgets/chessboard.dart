@@ -55,8 +55,11 @@ class ChessBoardColors {
   /// The color of the end square for drag and drop
   Color endSquareColor = Colors.green;
 
-  /// The color of the drag and drop indicator's cells.
-  Color dndIndicatorColor = Colors.purple;
+  /// Optional color for the drag and drop indicator's cells.
+  Color? dndIndicatorColor;
+
+  /// The color of the possible move indicators (dots).
+  Color possibleMovesColor = Colors.grey.withAlpha(128);
 
   /// Constructor.
   ChessBoardColors();
@@ -105,6 +108,12 @@ class SimpleChessBoard extends StatelessWidget {
   /// Last move arrow.
   final BoardArrow? lastMoveToHighlight;
 
+  /// Should the start and end squares be highlighted when showing last move arrow?
+  final bool highlightLastMoveSquares;
+
+  /// Should possible moves be shown as dots when dragging a piece?
+  final bool? showPossibleMoves;
+
   /// Must a circular progress bar be visible above of the board ?
   final bool engineThinking;
 
@@ -137,6 +146,8 @@ class SimpleChessBoard extends StatelessWidget {
     this.engineThinking = false,
     this.showCoordinatesZone = true,
     this.lastMoveToHighlight,
+    this.highlightLastMoveSquares = false,
+    this.showPossibleMoves,
   });
 
   void _processMove(ShortMove move) {
@@ -212,6 +223,8 @@ class SimpleChessBoard extends StatelessWidget {
               onPromote: onPromote,
               onPromotionCommited: onPromotionCommited,
               onTap: onTap,
+              highlightLastMoveSquares: highlightLastMoveSquares,
+              showPossibleMoves: showPossibleMoves ?? false,
               arrow: (lastMoveToHighlight != null)
                   ? BoardArrow(
                       from: lastMoveToHighlight!.from,
@@ -338,6 +351,8 @@ class _Chessboard extends StatefulWidget {
   final String fen;
   final BoardArrow? arrow;
   final Map<String, Color> cellHighlights;
+  final bool highlightLastMoveSquares;
+  final bool showPossibleMoves;
   final void Function(ShortMove move) processMove;
   final Future<PieceType?> Function() onPromote;
   final void Function({
@@ -358,6 +373,8 @@ class _Chessboard extends StatefulWidget {
     required this.processMove,
     required this.arrow,
     required this.cellHighlights,
+    required this.highlightLastMoveSquares,
+    required this.showPossibleMoves,
     required this.onPromote,
     required this.onPromotionCommited,
     required this.onTap,
@@ -371,6 +388,7 @@ class _ChessboardState extends State<_Chessboard> {
   _DragAndDropDetails? _dndDetails;
   (int, int)? _tapStart;
   Map<String, Piece?> _squares = <String, Piece?>{};
+  List<String> _possibleMoves = [];
 
   @override
   void initState() {
@@ -383,6 +401,11 @@ class _ChessboardState extends State<_Chessboard> {
     super.didUpdateWidget(oldWidget);
     setState(() {
       _squares = getSquares(widget.fen);
+      // Only clear possible moves if the FEN actually changed (indicating a move was made)
+      if (oldWidget.fen != widget.fen) {
+        _possibleMoves = [];
+        _tapStart = null;
+      }
     });
   }
 
@@ -410,12 +433,23 @@ class _ChessboardState extends State<_Chessboard> {
 
     if (isNotAPieceOfPlayerInTurn) return;
 
+    // Calculate possible moves for the selected piece
+    if (widget.showPossibleMoves) {
+      final chessLogic = chess.Chess.fromFEN(widget.fen);
+      _possibleMoves = chessLogic
+          .moves({'square': squareName, 'verbose': true})
+          .map<String>((move) => move['to'] as String)
+          .toList();
+    }
+
     setState(() {
       _dndDetails = _DragAndDropDetails(
         movedPiece: piece,
         startCell: (file, rank),
         position: (details.localPosition.dx, details.localPosition.dy),
       );
+      // Clear tap selection when drag starts
+      _tapStart = null;
     });
   }
 
@@ -459,6 +493,7 @@ class _ChessboardState extends State<_Chessboard> {
       }
       setState(() {
         _dndDetails = null;
+        _possibleMoves = [];
       });
       return;
     }
@@ -466,6 +501,7 @@ class _ChessboardState extends State<_Chessboard> {
     widget.processMove(move);
     setState(() {
       _dndDetails = null;
+      _possibleMoves = [];
     });
     Future.delayed(
       const Duration(milliseconds: 35),
@@ -479,10 +515,11 @@ class _ChessboardState extends State<_Chessboard> {
     if (_dndDetails == null) return;
     setState(() {
       _dndDetails = null;
+      _possibleMoves = [];
     });
   }
 
-  void _handleTap(TapUpDetails details) {
+  void _handleTap(TapUpDetails details) async {
     final eventCoordinates = details.localPosition;
 
     final eventX = eventCoordinates.dx;
@@ -498,6 +535,86 @@ class _ChessboardState extends State<_Chessboard> {
 
     final cellCoordinate = "${String.fromCharCode('a'.codeUnitAt(0) + file)}"
         "${String.fromCharCode('1'.codeUnitAt(0) + rank)}";
+
+    // Handle possible moves display on tap
+    if (widget.showPossibleMoves && _isHumanTurn()) {
+      final piece = _squares[cellCoordinate];
+
+      if (piece != null) {
+        final isWhiteTurn = widget.fen.split(" ")[1] == "w";
+        final isPieceOfPlayerInTurn = isWhiteTurn
+            ? piece.color == BoardColor.white
+            : piece.color == BoardColor.black;
+
+        if (isPieceOfPlayerInTurn) {
+          // Check if this is the same piece that's already selected
+          final currentlySelected = _tapStart != null &&
+              _tapStart!.$1 == file &&
+              _tapStart!.$2 == rank;
+
+          if (currentlySelected) {
+            // If same piece clicked again, clear selection
+            setState(() {
+              _possibleMoves = [];
+              _tapStart = null;
+            });
+          } else {
+            // Calculate and show possible moves for tapped piece
+            final chessLogic = chess.Chess.fromFEN(widget.fen);
+            final moves = chessLogic
+                .moves({'square': cellCoordinate, 'verbose': true})
+                .map<String>((move) => move['to'] as String)
+                .toList();
+
+            setState(() {
+              _possibleMoves = moves;
+              _tapStart = (file, rank);
+            });
+          }
+        } else {
+          // Clear possible moves if tapping on opponent's piece
+          setState(() {
+            _possibleMoves = [];
+            _tapStart = null;
+          });
+        }
+      } else {
+        // Check if tapping on a possible move square (to make a move)
+        if (_possibleMoves.contains(cellCoordinate) && _tapStart != null) {
+          // Make the move
+          final from = coordinatesToSquareName(_tapStart!.$1, _tapStart!.$2);
+          final move = ShortMove(from: from, to: cellCoordinate);
+
+          if (isPromoting(widget.fen, move)) {
+            // Handle promotion
+            final selectedPiece = await widget.onPromote();
+            if (selectedPiece != null) {
+              widget.onPromotionCommited(
+                moveDone: move,
+                pieceType: selectedPiece,
+              );
+            }
+          } else {
+            widget.processMove(move);
+          }
+
+          // Clear selection after move
+          setState(() {
+            _possibleMoves = [];
+            _tapStart = null;
+          });
+
+          // Don't call onTap callback when making a move
+          return;
+        } else {
+          // Clear possible moves if tapping on empty square that's not a valid move
+          setState(() {
+            _possibleMoves = [];
+            _tapStart = null;
+          });
+        }
+      }
+    }
 
     widget.onTap(cellCoordinate: cellCoordinate);
   }
@@ -525,6 +642,8 @@ class _ChessboardState extends State<_Chessboard> {
           tapStart: _tapStart,
           arrow: widget.arrow,
           cellHighlights: widget.cellHighlights,
+          highlightLastMoveSquares: widget.highlightLastMoveSquares,
+          possibleMoves: _possibleMoves,
         ),
         size: Size.square(widget.size),
         isComplex: true,
@@ -569,6 +688,8 @@ class _ChessBoardPainter extends CustomPainter {
   final (int, int)? tapStart;
   final BoardArrow? arrow;
   final Map<String, Color> cellHighlights;
+  final bool highlightLastMoveSquares;
+  final List<String> possibleMoves;
 
   _ChessBoardPainter({
     required this.colors,
@@ -578,12 +699,15 @@ class _ChessBoardPainter extends CustomPainter {
     required this.dragAndDropDetails,
     required this.arrow,
     required this.cellHighlights,
+    required this.highlightLastMoveSquares,
+    required this.possibleMoves,
   });
 
   @override
   void paint(Canvas canvas, Size size) {
     _drawBackground(canvas, size);
     _drawCells(canvas, size);
+    _drawPossibleMoves(canvas, size);
     _drawPieces(canvas, size);
     _drawLastMoveArrow(canvas, size);
     _drawMovedPiece(canvas, size);
@@ -629,14 +753,28 @@ class _ChessBoardPainter extends CustomPainter {
         final isEndSquare = dragAndDropDetails != null &&
             dragAndDropDetails?.endCell.$1 == file &&
             dragAndDropDetails?.endCell.$2 == rank;
-        final isDndIndicatorSquare = dragAndDropDetails != null &&
-                dragAndDropDetails?.endCell.$1 == file ||
-            dragAndDropDetails?.endCell.$2 == rank;
         final isTapStartCell = tapStart?.$1 == file && tapStart?.$2 == rank;
 
-        if (isDndIndicatorSquare) paint.color = colors.dndIndicatorColor;
-        if (isStartSquare) paint.color = colors.startSquareColor;
-        if (isEndSquare) paint.color = colors.endSquareColor;
+        // Check if this square is the start or end of the last move arrow
+        final isLastMoveStartSquare = highlightLastMoveSquares &&
+            arrow != null &&
+            cellCoord == arrow!.from;
+        final isLastMoveEndSquare =
+            highlightLastMoveSquares && arrow != null && cellCoord == arrow!.to;
+
+        if (colors.dndIndicatorColor != null) {
+          final isDndIndicatorSquare = dragAndDropDetails != null &&
+              (dragAndDropDetails?.endCell.$1 == file ||
+                  dragAndDropDetails?.endCell.$2 == rank);
+          if (isDndIndicatorSquare) paint.color = colors.dndIndicatorColor!;
+        }
+
+        if (isStartSquare || isLastMoveStartSquare) {
+          paint.color = colors.startSquareColor;
+        }
+        if (isEndSquare || isLastMoveEndSquare) {
+          paint.color = colors.endSquareColor;
+        }
         if (isTapStartCell) paint.color = colors.startSquareColor;
 
         canvas.drawRect(rect, paint);
@@ -830,6 +968,63 @@ class _ChessBoardPainter extends CustomPainter {
     }
 
     canvas.restore();
+  }
+
+  void _drawPossibleMoves(Canvas canvas, Size size) {
+    if (possibleMoves.isEmpty) return;
+
+    final cellSize = size.shortestSide / 8;
+
+    for (final moveSquare in possibleMoves) {
+      // Parse square name (e.g., "e4" -> file: 4, rank: 3)
+      final file = moveSquare.codeUnitAt(0) - 'a'.codeUnitAt(0);
+      final rank = int.parse(moveSquare[1]) - 1;
+
+      final col = blackSideAtBottom ? 7 - file : file;
+      final row = blackSideAtBottom ? rank : 7 - rank;
+
+      final centerX = (col + 0.5) * cellSize;
+      final centerY = (row + 0.5) * cellSize;
+
+      // Check if there's a piece on this square
+      final piece = squares[moveSquare];
+
+      if (piece != null) {
+        // If there's a piece (capture move), draw a gradient overlay
+        final rect = Rect.fromLTWH(
+          col * cellSize,
+          row * cellSize,
+          cellSize,
+          cellSize,
+        );
+
+        final gradient = LinearGradient(
+          begin: Alignment.topCenter,
+          end: Alignment.bottomCenter,
+          colors: [
+            colors.possibleMovesColor.withAlpha(0), // Transparent at top
+            colors.possibleMovesColor, // More opaque at bottom
+          ],
+        );
+
+        final gradientPaint = Paint()
+          ..shader = gradient.createShader(rect)
+          ..style = PaintingStyle.fill;
+
+        canvas.drawRect(rect, gradientPaint);
+      } else {
+        // If no piece (normal move), draw a hollow circle
+        final circleRadius = cellSize * 0.15;
+        final strokeWidth = cellSize * 0.08;
+
+        final hollowPaint = Paint()
+          ..color = colors.possibleMovesColor
+          ..style = PaintingStyle.stroke
+          ..strokeWidth = strokeWidth;
+
+        canvas.drawCircle(Offset(centerX, centerY), circleRadius, hollowPaint);
+      }
+    }
   }
 }
 

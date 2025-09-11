@@ -27,7 +27,9 @@ A simple chess board, where:
 - you can add arrows,
 - you can choose colors,
 - the common size will be the least of attributed width/height : if width > height => takes the allocated height, and the reverse if width < height (so for example, if you use it in a Row/Column, you can set the stretch alignment in the cross axis direction for a quite good layout/effect),
-- you can highlights some square, from the color you want.
+- you can highlights some square, from the color you want,
+- you can enable interactive tap-to-move functionality with visual move indicators,
+- you can customize move indicator widgets for both normal moves and capture moves.
 
 If you want to implement game logic, you can use the [chess](https://pub.dev/packages/chess) package.
 
@@ -55,6 +57,7 @@ SimpleChessBoard(
     blackPlayerType: PlayerType.computer,
     lastMoveToHighlight: BoardArrow(from: 'e2', to: 'e4', color: Colors.blueAccent),
     onPromote: () => PieceType.queen,
+    showPossibleMoves: true, // Enable interactive tap-to-move
 ),
 ```
 
@@ -70,7 +73,8 @@ SimpleChessBoard(
       ..startSquareColor = Colors.orange
       ..endSquareColor = Colors.green
       ..circularProgressBarColor = Colors.red
-      ..coordinatesColor = Colors.green,
+      ..coordinatesColor = Colors.green
+      ..possibleMovesColor = Colors.grey.withAlpha(128), // For default move indicators
     engineThinking: false,
     fen: _chess.fen,
     onMove: tryMakingMove,
@@ -79,6 +83,7 @@ SimpleChessBoard(
     blackPlayerType: PlayerType.human,
     lastMoveToHighlight: _lastMoveArrowCoordinates,
     cellHighlights: _highlightCells,
+    showPossibleMoves: true, // Enable tap-to-move with visual indicators
     onPromote: () => handlePromotion(context),
     onPromotionCommited: ({
         required ShortMove moveDone,
@@ -96,6 +101,53 @@ SimpleChessBoard(
         setState(() {});
         }
     },
+),
+```
+
+### Customizing move indicators
+
+```dart
+SimpleChessBoard(
+    engineThinking: false,
+    fen: _chess.fen,
+    onMove: tryMakingMove,
+    blackSideAtBottom: _blackAtBottom,
+    whitePlayerType: PlayerType.human,
+    blackPlayerType: PlayerType.human,
+    showPossibleMoves: true,
+    // Custom widget for normal moves (empty squares)
+    normalMoveIndicatorBuilder: (cellSize) => Container(
+        width: cellSize,
+        height: cellSize,
+        child: Center(
+            child: Container(
+                width: cellSize * 0.3,
+                height: cellSize * 0.3,
+                decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    color: Colors.blue.withOpacity(0.7),
+                ),
+            ),
+        ),
+    ),
+    // Custom widget for capture moves (squares with opponent pieces)
+    captureMoveIndicatorBuilder: (cellSize) => Container(
+        width: cellSize,
+        height: cellSize,
+        decoration: BoxDecoration(
+            border: Border.all(
+                color: Colors.red,
+                width: cellSize * 0.05,
+            ),
+        ),
+        child: Icon(
+            Icons.close,
+            color: Colors.red,
+            size: cellSize * 0.5,
+        ),
+    ),
+    onPromote: () => handlePromotion(context),
+    // ... other required parameters
 ),
 ```
 
@@ -161,6 +213,9 @@ SimpleChessBoard(
 - onPromote: the given function is called whenever a promotion move is done on board by the user (if he's allowed to move pieces). You must return a `Future<PieceType?>`. The `Future` can wrap a `null` value in order to cancel. Otherwise, wrap a `PieceType` such as `PieceType.queen`.
 - showCoordinatesZone (optionnal) : says if you want to show coordinates and player turn around the board. Give `true` for showing it, or `false` for removing it.
 - lastMoveToHighlight (optionnal) : give data about the arrow to draw on the board, if any. You pass a `BoardArrow` with from/to cells `String` and color `Color` (such as `BoardArrow(from: 'e2', to: 'e4', color: Colors.blueAccent)`) if you want to draw an arrow, or `null` if you don't want any arrow on the board.
+- showPossibleMoves (optional) : enable interactive tap-to-move functionality with visual move indicators. Set to `true` to show possible moves when a piece is selected.
+- normalMoveIndicatorBuilder (optional) : custom widget builder for normal move indicators (moves to empty squares). Receives the cell size as parameter and should return a widget.
+- captureMoveIndicatorBuilder (optional) : custom widget builder for capture move indicators (moves to squares with opponent pieces). Receives the cell size as parameter and should return a widget.
 - engineThinking (optionnal) : says if you want to show a `CircularProgressBar` in order to indicate that an engine is trying to compute next move for example.
 
 ## Project's repository

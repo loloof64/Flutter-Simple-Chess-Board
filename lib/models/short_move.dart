@@ -10,4 +10,9 @@ class ShortMove {
     required this.to,
     this.promotion,
   });
+
+  @override
+  String toString() {
+    return "ShortMove($from, $to, $promotion)";
+  }
 }

@@ -3,7 +3,7 @@ description: A simple demo about usage of Simple Chess Board.
 
 # The following line prevents the package from being accidentally published to
 # pub.dev using `flutter pub publish`. This is preferred for private packages.
-publish_to: 'none' # Remove this line if you wish to publish to pub.dev
+publish_to: "none" # Remove this line if you wish to publish to pub.dev
 
 # The following defines the version and build number for your application.
 # A version number is three numbers separated by dots, like 1.2.43
@@ -32,7 +32,6 @@ dependencies:
   flutter_localizations:
     sdk: flutter
 
-
   # The following adds the Cupertino Icons font to your application.
   # Use with the CupertinoIcons class for iOS style icons.
   cupertino_icons: ^1.0.2
@@ -42,8 +41,8 @@ dependencies:
   flutter_launcher_icons: ^0.14.1
   simple_chess_board:
     path: ../
-  chess: ^0.8.0
-  chess_vectors_flutter: ^1.0.16
+  chess: ^0.8.1
+  chess_vectors_flutter: ^1.1.0
   petitparser: ^6.0.2
   flutter_svg: ^2.0.6
   provider: ^6.0.2
@@ -70,7 +69,6 @@ flutter_icons:
 
 # The following section is specific to Flutter.
 flutter:
-
   # The following line ensures that the Material Icons font is
   # included with your application, so that you can use the icons in
   # the material Icons class.

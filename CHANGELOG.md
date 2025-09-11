@@ -1,3 +1,8 @@
+## 1.8.0
+
+- Add interactive possible moves visualization and optional last move square highlighting (thank you berkaycatak)
+- Add interactive tap-to-move with customizable move indicators (thank you berkaycatak)
+
 ## 1.7.1
 
 - Expand readme with an example customizing colors

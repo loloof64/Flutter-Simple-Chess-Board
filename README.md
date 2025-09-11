@@ -49,16 +49,21 @@ You can find a longer example in the `example` folder.
 SimpleChessBoard(
     engineThinking: false,
     fen: '8/8/8/4p1K1/2k1P3/8/8/8 b - - 0 1',
-    onMove: ({required ShortMove move}){
-        print('${move.from}|${move.to}|${move.promotion}')
+    onMove: ({required ShortMove move}) {
+    debugPrint('${move.from}|${move.to}|${move.promotion}');
     },
-    orientation: BoardColor.black,
+    blackSideAtBottom: false,
     whitePlayerType: PlayerType.human,
     blackPlayerType: PlayerType.computer,
-    lastMoveToHighlight: BoardArrow(from: 'e2', to: 'e4', color: Colors.blueAccent),
-    onPromote: () => PieceType.queen,
-    showPossibleMoves: true, // Enable interactive tap-to-move
-),
+    lastMoveToHighlight: BoardArrow(from: 'e2', to: 'e4'),
+    onPromote: () async => PieceType.queen,
+    onPromotionCommited: ({required moveDone, required pieceType}) => {},
+    onTap: ({required cellCoordinate}) {},
+    cellHighlights: <String, Color>{},
+    chessBoardColors: ChessBoardColors()
+    ..lastMoveArrowColor = Colors.redAccent,
+    showPossibleMoves: false,
+)
 ```
 
 ### Customizing colors
@@ -66,15 +71,14 @@ SimpleChessBoard(
 ```dart
 SimpleChessBoard(
     chessBoardColors: ChessBoardColors()
-      ..lightSquaresColor = Colors.blue.shade200
-      ..darkSquaresColor = Colors.blue.shade600
-      ..coordinatesZoneColor = Colors.redAccent.shade200
-      ..lastMoveArrowColor = Colors.cyan
-      ..startSquareColor = Colors.orange
-      ..endSquareColor = Colors.green
-      ..circularProgressBarColor = Colors.red
-      ..coordinatesColor = Colors.green
-      ..possibleMovesColor = Colors.grey.withAlpha(128), // For default move indicators
+        ..lightSquaresColor = Colors.blue.shade200
+        ..darkSquaresColor = Colors.blue.shade600
+        ..coordinatesZoneColor = Colors.redAccent.shade200
+        ..lastMoveArrowColor = Colors.cyan
+        ..startSquareColor = Colors.orange
+        ..endSquareColor = Colors.green
+        ..circularProgressBarColor = Colors.red
+        ..coordinatesColor = Colors.green,
     engineThinking: false,
     fen: _chess.fen,
     onMove: tryMakingMove,
@@ -83,7 +87,6 @@ SimpleChessBoard(
     blackPlayerType: PlayerType.human,
     lastMoveToHighlight: _lastMoveArrowCoordinates,
     cellHighlights: _highlightCells,
-    showPossibleMoves: true, // Enable tap-to-move with visual indicators
     onPromote: () => handlePromotion(context),
     onPromotionCommited: ({
         required ShortMove moveDone,
@@ -101,7 +104,7 @@ SimpleChessBoard(
         setState(() {});
         }
     },
-),
+)
 ```
 
 ### Customizing move indicators
@@ -116,7 +119,7 @@ SimpleChessBoard(
     blackPlayerType: PlayerType.human,
     showPossibleMoves: true,
     // Custom widget for normal moves (empty squares)
-    normalMoveIndicatorBuilder: (cellSize) => Container(
+    normalMoveIndicatorBuilder: (cellSize) => SizedBox(
         width: cellSize,
         height: cellSize,
         child: Center(
@@ -125,7 +128,7 @@ SimpleChessBoard(
                 height: cellSize * 0.3,
                 decoration: BoxDecoration(
                     shape: BoxShape.circle,
-                    color: Colors.blue.withOpacity(0.7),
+                    color: Colors.blue.withValues(alpha: 0.7),
                 ),
             ),
         ),
@@ -162,44 +165,52 @@ As an example:
 SimpleChessBoard(
     engineThinking: false,
     fen: '1k6/p2KP3/1p6/8/4B3/8/8/8 w - - 0 1',
-    onMove: ({required ShortMove move}){
-        print('${move.from}|${move.to}|${move.promotion}')
+    onMove: ({required ShortMove move}) {
+        debugPrint('${move.from}|${move.to}|${move.promotion}');
     },
-    orientation: BoardColor.white,
+    blackSideAtBottom: false,
     whitePlayerType: PlayerType.human,
     blackPlayerType: PlayerType.computer,
-    lastMoveToHighlight: BoardArrow(from: 'e2', to: 'e4', color: Colors.blueAccent),
-        onPromote: () {
-            return showDialog<PieceType>(
-            context: context,
-            builder: (_) {
-                return AlertDialog(
-                title: Text('Promotion'),
-                content: Column(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                            ListTile(
-                                title: Text("Queen"),
-                                onTap: () => navigator.pop(PieceType.queen),
-                            ),
-                            ListTile(
-                                title: Text("Rook"),
-                                onTap: () => navigator.pop(PieceType.rook),
-                            ),
-                            ListTile(
-                                title: Text("Bishop"),
-                                onTap: () => navigator.pop(PieceType.bishop),
-                            ),
-                            ListTile(
-                                title: Text("Knight"),
-                                onTap: () => navigator.pop(PieceType.knight),
-                            ),
-                        ],
-                    ),
-                );
-            },
+    lastMoveToHighlight: null,
+    onPromote: () {
+        return showDialog<PieceType>(
+        context: context,
+        builder: (_) {
+            return AlertDialog(
+            title: Text('Promotion'),
+            content: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                ListTile(
+                    title: Text("Queen"),
+                    onTap: () =>
+                        Navigator.of(context).pop(PieceType.queen),
+                ),
+                ListTile(
+                    title: Text("Rook"),
+                    onTap: () =>
+                        Navigator.of(context).pop(PieceType.rook),
+                ),
+                ListTile(
+                    title: Text("Bishop"),
+                    onTap: () =>
+                        Navigator.of(context).pop(PieceType.bishop),
+                ),
+                ListTile(
+                    title: Text("Knight"),
+                    onTap: () =>
+                        Navigator.of(context).pop(PieceType.knight),
+                ),
+                ],
+            ),
+            );
+        },
         );
     },
+    onPromotionCommited: ({required moveDone, required pieceType}) {
+        // update the board logic with the given pieceType and moveData inside moveDone.
+    },
+    // Other parameters ...
 )
 ```
 

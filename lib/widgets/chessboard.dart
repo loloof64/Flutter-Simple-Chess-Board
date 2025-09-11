@@ -538,6 +538,35 @@ class _ChessboardState extends State<_Chessboard> {
 
     // Handle possible moves display on tap
     if (widget.showPossibleMoves && _isHumanTurn()) {
+      // Check if tapping on a possible move square (to make a move) FIRST
+      if (_possibleMoves.contains(cellCoordinate) && _tapStart != null) {
+        // Make the move
+        final from = coordinatesToSquareName(_tapStart!.$1, _tapStart!.$2);
+        final move = ShortMove(from: from, to: cellCoordinate);
+
+        if (isPromoting(widget.fen, move)) {
+          // Handle promotion
+          final selectedPiece = await widget.onPromote();
+          if (selectedPiece != null) {
+            widget.onPromotionCommited(
+              moveDone: move,
+              pieceType: selectedPiece,
+            );
+          }
+        } else {
+          widget.processMove(move);
+        }
+
+        // Clear selection after move
+        setState(() {
+          _possibleMoves = [];
+          _tapStart = null;
+        });
+
+        // Don't call onTap callback when making a move
+        return;
+      }
+
       final piece = _squares[cellCoordinate];
 
       if (piece != null) {
@@ -579,40 +608,11 @@ class _ChessboardState extends State<_Chessboard> {
           });
         }
       } else {
-        // Check if tapping on a possible move square (to make a move)
-        if (_possibleMoves.contains(cellCoordinate) && _tapStart != null) {
-          // Make the move
-          final from = coordinatesToSquareName(_tapStart!.$1, _tapStart!.$2);
-          final move = ShortMove(from: from, to: cellCoordinate);
-
-          if (isPromoting(widget.fen, move)) {
-            // Handle promotion
-            final selectedPiece = await widget.onPromote();
-            if (selectedPiece != null) {
-              widget.onPromotionCommited(
-                moveDone: move,
-                pieceType: selectedPiece,
-              );
-            }
-          } else {
-            widget.processMove(move);
-          }
-
-          // Clear selection after move
-          setState(() {
-            _possibleMoves = [];
-            _tapStart = null;
-          });
-
-          // Don't call onTap callback when making a move
-          return;
-        } else {
-          // Clear possible moves if tapping on empty square that's not a valid move
-          setState(() {
-            _possibleMoves = [];
-            _tapStart = null;
-          });
-        }
+        // Clear possible moves if tapping on empty square that's not a valid move
+        setState(() {
+          _possibleMoves = [];
+          _tapStart = null;
+        });
       }
     }
 
@@ -1002,8 +1002,8 @@ class _ChessBoardPainter extends CustomPainter {
           begin: Alignment.topCenter,
           end: Alignment.bottomCenter,
           colors: [
-            colors.possibleMovesColor.withAlpha(0), // Transparent at top
-            colors.possibleMovesColor, // More opaque at bottom
+            colors.possibleMovesColor.withAlpha(0),
+            colors.possibleMovesColor,
           ],
         );
 

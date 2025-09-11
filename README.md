@@ -222,12 +222,14 @@ SimpleChessBoard(
 - blackPlayerType : if it is black turn and this is set to `PlayerType.human`, then the user will be able to move pieces. Either with the click method, or with the drag and drop method. Otherwise, if set to `PlayerType.computer` and it is black turn, then the user won't be able to move pieces.
 - onMove : the given function will be called whenever a move is done on board by the user (if he's allowed to move pieces). It has a single `required` parameter `ShortMove move` which carries data about from/to cells, as well as promotion type which is nullable. **Notice that it's up to you to update the board or not based on the move you receive from this function.** You can use the [chess](https://pub.dev/packages/chess) package to get the new position.
 - onPromote: the given function is called whenever a promotion move is done on board by the user (if he's allowed to move pieces). You must return a `Future<PieceType?>`. The `Future` can wrap a `null` value in order to cancel. Otherwise, wrap a `PieceType` such as `PieceType.queen`.
+- onPromotionCommited : you should update the board logic here, as you get data about the move made and the selected promotion. The simplest way is to first change the promotion type of the given move data, and then try to update the board logic. (See example application code.)
 - showCoordinatesZone (optionnal) : says if you want to show coordinates and player turn around the board. Give `true` for showing it, or `false` for removing it.
-- lastMoveToHighlight (optionnal) : give data about the arrow to draw on the board, if any. You pass a `BoardArrow` with from/to cells `String` and color `Color` (such as `BoardArrow(from: 'e2', to: 'e4', color: Colors.blueAccent)`) if you want to draw an arrow, or `null` if you don't want any arrow on the board.
+- lastMoveToHighlight (optionnal) : give data about the arrow to draw on the board, if any. You pass a `BoardArrow` with from/to cells `String` (such as `BoardArrow(from: 'e2', to: 'e4')`) if you want to draw an arrow, or `null` if you don't want any arrow on the board. Given that colors can be customized in the `ChessBoardColors` instance you give to the board.
 - showPossibleMoves (optional) : enable interactive tap-to-move functionality with visual move indicators. Set to `true` to show possible moves when a piece is selected.
 - normalMoveIndicatorBuilder (optional) : custom widget builder for normal move indicators (moves to empty squares). Receives the cell size as parameter and should return a widget.
 - captureMoveIndicatorBuilder (optional) : custom widget builder for capture move indicators (moves to squares with opponent pieces). Receives the cell size as parameter and should return a widget.
 - engineThinking (optionnal) : says if you want to show a `CircularProgressBar` in order to indicate that an engine is trying to compute next move for example.
+- boardColors : you pass a `ChessBoardColors` in which colors can be customized. See example project code.
 
 ## Project's repository
 

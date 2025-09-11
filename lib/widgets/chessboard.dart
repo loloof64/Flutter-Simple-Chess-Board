@@ -114,6 +114,12 @@ class SimpleChessBoard extends StatelessWidget {
   /// Should possible moves be shown as dots when dragging a piece?
   final bool? showPossibleMoves;
 
+  /// Custom widget builder for normal move indicators (empty squares)
+  final Widget Function(double cellSize)? normalMoveIndicatorBuilder;
+
+  /// Custom widget builder for capture move indicators (squares with opponent pieces)
+  final Widget Function(double cellSize)? captureMoveIndicatorBuilder;
+
   /// Must a circular progress bar be visible above of the board ?
   final bool engineThinking;
 
@@ -148,6 +154,8 @@ class SimpleChessBoard extends StatelessWidget {
     this.lastMoveToHighlight,
     this.highlightLastMoveSquares = false,
     this.showPossibleMoves,
+    this.normalMoveIndicatorBuilder,
+    this.captureMoveIndicatorBuilder,
   });
 
   void _processMove(ShortMove move) {
@@ -225,6 +233,8 @@ class SimpleChessBoard extends StatelessWidget {
               onTap: onTap,
               highlightLastMoveSquares: highlightLastMoveSquares,
               showPossibleMoves: showPossibleMoves ?? false,
+              normalMoveIndicatorBuilder: normalMoveIndicatorBuilder,
+              captureMoveIndicatorBuilder: captureMoveIndicatorBuilder,
               arrow: (lastMoveToHighlight != null)
                   ? BoardArrow(
                       from: lastMoveToHighlight!.from,
@@ -353,6 +363,8 @@ class _Chessboard extends StatefulWidget {
   final Map<String, Color> cellHighlights;
   final bool highlightLastMoveSquares;
   final bool showPossibleMoves;
+  final Widget Function(double cellSize)? normalMoveIndicatorBuilder;
+  final Widget Function(double cellSize)? captureMoveIndicatorBuilder;
   final void Function(ShortMove move) processMove;
   final Future<PieceType?> Function() onPromote;
   final void Function({
@@ -375,6 +387,8 @@ class _Chessboard extends StatefulWidget {
     required this.cellHighlights,
     required this.highlightLastMoveSquares,
     required this.showPossibleMoves,
+    required this.normalMoveIndicatorBuilder,
+    required this.captureMoveIndicatorBuilder,
     required this.onPromote,
     required this.onPromotionCommited,
     required this.onTap,
@@ -633,23 +647,72 @@ class _ChessboardState extends State<_Chessboard> {
       onPanUpdate: _handlePanUpdate,
       onPanEnd: _handlePanEnd,
       onPanCancel: _handlePanCancel,
-      child: CustomPaint(
-        painter: _ChessBoardPainter(
-          colors: widget.boardColors,
-          blackSideAtBottom: widget.blackSideAtBottom,
-          squares: _squares,
-          dragAndDropDetails: _dndDetails,
-          tapStart: _tapStart,
-          arrow: widget.arrow,
-          cellHighlights: widget.cellHighlights,
-          highlightLastMoveSquares: widget.highlightLastMoveSquares,
-          possibleMoves: _possibleMoves,
-        ),
-        size: Size.square(widget.size),
-        isComplex: true,
-        willChange: true,
+      child: Stack(
+        children: [
+          CustomPaint(
+            painter: _ChessBoardPainter(
+              colors: widget.boardColors,
+              blackSideAtBottom: widget.blackSideAtBottom,
+              squares: _squares,
+              dragAndDropDetails: _dndDetails,
+              tapStart: _tapStart,
+              arrow: widget.arrow,
+              cellHighlights: widget.cellHighlights,
+              highlightLastMoveSquares: widget.highlightLastMoveSquares,
+              possibleMoves: widget.showPossibleMoves ? _possibleMoves : [],
+              hasCustomNormalIndicator:
+                  widget.normalMoveIndicatorBuilder != null,
+              hasCustomCaptureIndicator:
+                  widget.captureMoveIndicatorBuilder != null,
+            ),
+            size: Size.square(widget.size),
+          ),
+          if (widget.showPossibleMoves) ..._buildPossibleMoveIndicators(),
+        ],
       ),
     );
+  }
+
+  List<Widget> _buildPossibleMoveIndicators() {
+    if (_possibleMoves.isEmpty) return [];
+
+    final cellSize = widget.size / 8;
+    final widgets = <Widget>[];
+
+    for (final moveSquare in _possibleMoves) {
+      // Parse square name (e.g., "e4" -> file: 4, rank: 3)
+      final file = moveSquare.codeUnitAt(0) - 'a'.codeUnitAt(0);
+      final rank = int.parse(moveSquare[1]) - 1;
+
+      final col = widget.blackSideAtBottom ? 7 - file : file;
+      final row = widget.blackSideAtBottom ? rank : 7 - rank;
+
+      // Check if there's a piece on this square
+      final piece = _squares[moveSquare];
+      final isCapture = piece != null;
+
+      Widget? indicator;
+
+      if (isCapture && widget.captureMoveIndicatorBuilder != null) {
+        indicator = widget.captureMoveIndicatorBuilder!(cellSize);
+      } else if (!isCapture && widget.normalMoveIndicatorBuilder != null) {
+        indicator = widget.normalMoveIndicatorBuilder!(cellSize);
+      }
+
+      if (indicator != null) {
+        widgets.add(
+          Positioned(
+            left: col * cellSize,
+            top: row * cellSize,
+            width: cellSize,
+            height: cellSize,
+            child: indicator,
+          ),
+        );
+      }
+    }
+
+    return widgets;
   }
 }
 
@@ -690,6 +753,8 @@ class _ChessBoardPainter extends CustomPainter {
   final Map<String, Color> cellHighlights;
   final bool highlightLastMoveSquares;
   final List<String> possibleMoves;
+  final bool hasCustomNormalIndicator;
+  final bool hasCustomCaptureIndicator;
 
   _ChessBoardPainter({
     required this.colors,
@@ -701,6 +766,8 @@ class _ChessBoardPainter extends CustomPainter {
     required this.cellHighlights,
     required this.highlightLastMoveSquares,
     required this.possibleMoves,
+    required this.hasCustomNormalIndicator,
+    required this.hasCustomCaptureIndicator,
   });
 
   @override
@@ -990,6 +1057,9 @@ class _ChessBoardPainter extends CustomPainter {
       final piece = squares[moveSquare];
 
       if (piece != null) {
+        // Skip capture moves if custom capture indicator is provided
+        if (hasCustomCaptureIndicator) continue;
+
         // If there's a piece (capture move), draw a gradient overlay
         final rect = Rect.fromLTWH(
           col * cellSize,
@@ -1013,6 +1083,9 @@ class _ChessBoardPainter extends CustomPainter {
 
         canvas.drawRect(rect, gradientPaint);
       } else {
+        // Skip normal moves if custom normal indicator is provided
+        if (hasCustomNormalIndicator) continue;
+
         // If no piece (normal move), draw a hollow circle
         final circleRadius = cellSize * 0.15;
         final strokeWidth = cellSize * 0.08;

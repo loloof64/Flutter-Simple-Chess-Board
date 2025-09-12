@@ -156,6 +156,81 @@ SimpleChessBoard(
 ),
 ```
 
+### Move history and navigation
+
+```dart
+class ChessBoardWithHistory extends StatefulWidget {
+  @override
+  State<ChessBoardWithHistory> createState() => _ChessBoardWithHistoryState();
+}
+
+class _ChessBoardWithHistoryState extends State<ChessBoardWithHistory> {
+  late chess.Chess _chess;
+  late MoveHistory _moveHistory;
+  String? _customFen;
+
+  @override
+  void initState() {
+    super.initState();
+    _chess = chess.Chess();
+    _moveHistory = MoveHistory(); // Optional: MoveHistory(initialFen: customFen)
+  }
+
+  void _onMove(ShortMove move) {
+    // Make move and add to history
+    final success = _chess.move({'from': move.from, 'to': move.to});
+    if (success) {
+      _moveHistory.addMove(
+        move: '${move.from}${move.to}',
+        fen: _chess.fen,
+      );
+      setState(() => _customFen = null);
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      children: [
+        SimpleChessBoard(
+          fen: _customFen ?? _chess.fen,
+          onMove: ({required move}) => _onMove(move),
+          // Board is only interactive when at current position
+          isInteractive: _customFen == null,
+          // Customize non-interactive overlay
+          nonInteractiveText: 'ANALYZING POSITION',
+          nonInteractiveTextStyle: TextStyle(
+            color: Colors.white,
+            fontWeight: FontWeight.bold,
+            fontSize: 14,
+          ),
+          nonInteractiveOverlayColor: Colors.deepPurple,
+          // ... other required parameters
+        ),
+        
+        // Navigation controls
+        MoveNavigationControls(
+          moveHistory: _moveHistory,
+          onGoBack: () => setState(() => _customFen = _moveHistory.goBack()),
+          onGoForward: () {
+            final fen = _moveHistory.goForward();
+            if (fen != null) setState(() => _customFen = fen);
+          },
+          onGoToStart: () => setState(() {
+            _customFen = _moveHistory.initialFen;
+            _moveHistory.goToIndex(-1);
+          }),
+          onGoToEnd: () => setState(() {
+            _customFen = null;
+            _moveHistory.goToIndex(_moveHistory.length - 1);
+          }),
+        ),
+      ],
+    );
+  }
+}
+```
+
 ### Handling promotion
 
 You handle promotion in the function you give to the mandatory `onPromote` parameter. In this function you return the `PieceType` you want to use.
@@ -230,6 +305,10 @@ SimpleChessBoard(
 - showPossibleMoves (optional) : enable interactive tap-to-move functionality with visual move indicators. Set to `true` to show possible moves when a piece is selected.
 - normalMoveIndicatorBuilder (optional) : custom widget builder for normal move indicators (moves to empty squares). Receives the cell size as parameter and should return a widget.
 - captureMoveIndicatorBuilder (optional) : custom widget builder for capture move indicators (moves to squares with opponent pieces). Receives the cell size as parameter and should return a widget.
+- isInteractive (optional) : whether the board allows user interaction. When `false`, displays a customizable overlay and prevents moves. Default: `true`.
+- nonInteractiveText (optional) : text to display when board is not interactive. Default: `'VIEWING HISTORY'`.
+- nonInteractiveTextStyle (optional) : text style for the non-interactive overlay text.
+- nonInteractiveOverlayColor (optional) : color for the non-interactive overlay border and background. Default: `Colors.orange`.
 - engineThinking (optionnal) : says if you want to show a `CircularProgressBar` in order to indicate that an engine is trying to compute next move for example.
 - boardColors : you pass a `ChessBoardColors` in which colors can be customized. See example project code.
 

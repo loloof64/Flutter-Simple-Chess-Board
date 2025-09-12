@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:simple_chess_board/models/board_arrow.dart';
 import 'package:simple_chess_board/simple_chess_board.dart';
 
 class SimpleBoardVariant extends StatelessWidget {

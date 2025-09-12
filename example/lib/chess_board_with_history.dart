@@ -132,7 +132,7 @@ class _ChessBoardWithHistoryState extends State<ChessBoardWithHistory> {
                   cellHighlights: {},
                   showPossibleMoves: true,
                   // Board is only interactive when we're at the current position
-                  isInteractive: _customFen == null,
+                  isInteractive: _moveHistory.canGoForward == false,
                   // Customize the non-interactive overlay
                   nonInteractiveText: 'ANALYZING POSITION',
                   nonInteractiveTextStyle: const TextStyle(

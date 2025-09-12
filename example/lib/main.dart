@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
-import 'package:simple_chess_board/models/board_arrow.dart';
-import 'package:chess/chess.dart' as chesslib;
-import 'package:simple_chess_board/simple_chess_board.dart';
+import 'package:simple_chess_board_usage/variants/custom_move_indicator.dart';
+import 'package:simple_chess_board_usage/variants/handling_promotions.dart';
+import 'package:simple_chess_board_usage/variants/interactive.dart';
+import 'package:simple_chess_board_usage/variants/simple.dart';
 
 void main() {
   runApp(const MyApp());
@@ -18,140 +19,69 @@ class MyApp extends StatelessWidget {
       theme: ThemeData(
         primarySwatch: Colors.blue,
       ),
-      home: const MyHomePage(title: 'Simple chess board Page'),
+      home: const MyHomePage(),
     );
   }
 }
 
-class MyHomePage extends StatefulWidget {
-  const MyHomePage({super.key, required this.title});
+class MyHomePage extends StatelessWidget {
+  const MyHomePage({
+    super.key,
+  });
 
-  final String title;
-
-  @override
-  State<MyHomePage> createState() => _MyHomePageState();
-}
-
-class _MyHomePageState extends State<MyHomePage> {
-  final _chess = chesslib.Chess.fromFEN(chesslib.Chess.DEFAULT_POSITION);
-  var _blackAtBottom = false;
-  BoardArrow? _lastMoveArrowCoordinates;
-  late ChessBoardColors _boardColors;
-  final _highlightCells = <String, Color>{};
-
-  @override
-  void initState() {
-    _boardColors = ChessBoardColors()
-      ..lightSquaresColor = Colors.blue.shade200
-      ..darkSquaresColor = Colors.blue.shade600
-      ..coordinatesZoneColor = Colors.redAccent.shade200
-      ..lastMoveArrowColor = Colors.cyan
-      ..startSquareColor = Colors.orange
-      ..endSquareColor = Colors.green
-      ..circularProgressBarColor = Colors.red
-      ..coordinatesColor = Colors.green;
-    super.initState();
+  Future<void> _goToSimpleBoard(BuildContext context) async {
+    await Navigator.of(context).push(MaterialPageRoute(builder: (context) {
+      return SimpleBoardVariant();
+    }));
   }
 
-  void tryMakingMove({required ShortMove move}) {
-    final success = _chess.move(<String, String?>{
-      'from': move.from,
-      'to': move.to,
-      'promotion': move.promotion?.name,
-    });
-    if (success) {
-      setState(() {
-        _lastMoveArrowCoordinates = BoardArrow(from: move.from, to: move.to);
-      });
-    }
+  Future<void> _goToInteractiveBoard(BuildContext context) async {
+    await Navigator.of(context).push(MaterialPageRoute(builder: (context) {
+      return InteractiveBoard();
+    }));
   }
 
-  Future<PieceType?> handlePromotion(BuildContext context) {
-    final navigator = Navigator.of(context);
-    return showDialog<PieceType>(
-      context: context,
-      builder: (_) {
-        return AlertDialog(
-          title: const Text('Promotion'),
-          content: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              ListTile(
-                title: const Text("Queen"),
-                onTap: () => navigator.pop(PieceType.queen),
-              ),
-              ListTile(
-                title: const Text("Rook"),
-                onTap: () => navigator.pop(PieceType.rook),
-              ),
-              ListTile(
-                title: const Text("Bishop"),
-                onTap: () => navigator.pop(PieceType.bishop),
-              ),
-              ListTile(
-                title: const Text("Knight"),
-                onTap: () => navigator.pop(PieceType.knight),
-              ),
-            ],
-          ),
-        );
-      },
-    );
+  Future<void> _goToCustomIndicatorsBoard(BuildContext context) async {
+    await Navigator.of(context).push(MaterialPageRoute(builder: (context) {
+      return CustomMoveIndicator();
+    }));
+  }
+
+  Future<void> _goToPromotionHandling(BuildContext context) async {
+    await Navigator.of(context).push(MaterialPageRoute(builder: (context) {
+      return HandlingPromotionsBoard();
+    }));
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text(widget.title),
-        actions: [
-          IconButton(
-            onPressed: () {
-              setState(() {
-                _blackAtBottom = !_blackAtBottom;
-              });
-            },
-            icon: const Icon(Icons.swap_vert),
-          )
-        ],
+        title: Text("Simple chess board demo"),
       ),
       body: Center(
         child: Column(
+          mainAxisSize: MainAxisSize.min,
           mainAxisAlignment: MainAxisAlignment.center,
           crossAxisAlignment: CrossAxisAlignment.center,
+          spacing: 10,
           children: [
-            Expanded(
-              child: SimpleChessBoard(
-                chessBoardColors: _boardColors,
-                engineThinking: false,
-                fen: _chess.fen,
-                onMove: tryMakingMove,
-                blackSideAtBottom: _blackAtBottom,
-                whitePlayerType: PlayerType.human,
-                blackPlayerType: PlayerType.human,
-                lastMoveToHighlight: _lastMoveArrowCoordinates,
-                cellHighlights: _highlightCells,
-                onPromote: () => handlePromotion(context),
-                onPromotionCommited: ({
-                  required ShortMove moveDone,
-                  required PieceType pieceType,
-                }) {
-                  moveDone.promotion = pieceType;
-                  tryMakingMove(move: moveDone);
-                },
-                onTap: ({required String cellCoordinate}) {
-                  if (_highlightCells[cellCoordinate] == null) {
-                    _highlightCells[cellCoordinate] = Colors.red.withAlpha(70);
-                    setState(() {});
-                  } else {
-                    _highlightCells.remove(cellCoordinate);
-                    setState(() {});
-                  }
-                },
-              ),
+            ElevatedButton(
+              onPressed: () => _goToSimpleBoard(context),
+              child: Text("See simple board"),
             ),
-            Text("Click on a cell in order to (un)highlight it."
-                " You can also drag and drop pieces")
+            ElevatedButton(
+              onPressed: () => _goToInteractiveBoard(context),
+              child: Text("See interactive board"),
+            ),
+            ElevatedButton(
+              onPressed: () => _goToCustomIndicatorsBoard(context),
+              child: Text("See custom indicators board"),
+            ),
+            ElevatedButton(
+              onPressed: () => _goToPromotionHandling(context),
+              child: Text("See nicer promotion handling"),
+            )
           ],
         ),
       ),

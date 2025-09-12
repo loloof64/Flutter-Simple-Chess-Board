@@ -35,6 +35,8 @@ If you want to implement game logic, you can use the [chess](https://pub.dev/pac
 
 Please, also notice, that when there is a pending promotion, you should prevent the user to reverse the board orientation. Otherwise the result can be quite ugly. This can easily be done by showing a modal over your interface when the user is invited to choose a promotion piece.
 
+Last but not least : there's no implementation of cpu thinking, but you can grab a package for that. For example [Stockfish Chess Engine](https://pub.dev/packages/stockfish_chess_engine).
+
 ## Getting started
 
 To use SimpleChessBoard widget, add [simple_chess_board](https://pub.dev/packages/simple_chess_board/install) as a dependency in your pubspec.yaml .
@@ -49,16 +51,21 @@ You can find a longer example in the `example` folder.
 SimpleChessBoard(
     engineThinking: false,
     fen: '8/8/8/4p1K1/2k1P3/8/8/8 b - - 0 1',
-    onMove: ({required ShortMove move}){
-        print('${move.from}|${move.to}|${move.promotion}')
+    onMove: ({required ShortMove move}) {
+    debugPrint('${move.from}|${move.to}|${move.promotion}');
     },
-    orientation: BoardColor.black,
+    blackSideAtBottom: false,
     whitePlayerType: PlayerType.human,
     blackPlayerType: PlayerType.computer,
-    lastMoveToHighlight: BoardArrow(from: 'e2', to: 'e4', color: Colors.blueAccent),
-    onPromote: () => PieceType.queen,
-    showPossibleMoves: true, // Enable interactive tap-to-move
-),
+    lastMoveToHighlight: BoardArrow(from: 'e2', to: 'e4'),
+    onPromote: () async => PieceType.queen,
+    onPromotionCommited: ({required moveDone, required pieceType}) => {},
+    onTap: ({required cellCoordinate}) {},
+    cellHighlights: <String, Color>{},
+    chessBoardColors: ChessBoardColors()
+    ..lastMoveArrowColor = Colors.redAccent,
+    showPossibleMoves: false,
+)
 ```
 
 ### Customizing colors
@@ -66,15 +73,14 @@ SimpleChessBoard(
 ```dart
 SimpleChessBoard(
     chessBoardColors: ChessBoardColors()
-      ..lightSquaresColor = Colors.blue.shade200
-      ..darkSquaresColor = Colors.blue.shade600
-      ..coordinatesZoneColor = Colors.redAccent.shade200
-      ..lastMoveArrowColor = Colors.cyan
-      ..startSquareColor = Colors.orange
-      ..endSquareColor = Colors.green
-      ..circularProgressBarColor = Colors.red
-      ..coordinatesColor = Colors.green
-      ..possibleMovesColor = Colors.grey.withAlpha(128), // For default move indicators
+        ..lightSquaresColor = Colors.blue.shade200
+        ..darkSquaresColor = Colors.blue.shade600
+        ..coordinatesZoneColor = Colors.redAccent.shade200
+        ..lastMoveArrowColor = Colors.cyan
+        ..startSquareColor = Colors.orange
+        ..endSquareColor = Colors.green
+        ..circularProgressBarColor = Colors.red
+        ..coordinatesColor = Colors.green,
     engineThinking: false,
     fen: _chess.fen,
     onMove: tryMakingMove,
@@ -83,7 +89,6 @@ SimpleChessBoard(
     blackPlayerType: PlayerType.human,
     lastMoveToHighlight: _lastMoveArrowCoordinates,
     cellHighlights: _highlightCells,
-    showPossibleMoves: true, // Enable tap-to-move with visual indicators
     onPromote: () => handlePromotion(context),
     onPromotionCommited: ({
         required ShortMove moveDone,
@@ -101,7 +106,7 @@ SimpleChessBoard(
         setState(() {});
         }
     },
-),
+)
 ```
 
 ### Customizing move indicators
@@ -116,7 +121,7 @@ SimpleChessBoard(
     blackPlayerType: PlayerType.human,
     showPossibleMoves: true,
     // Custom widget for normal moves (empty squares)
-    normalMoveIndicatorBuilder: (cellSize) => Container(
+    normalMoveIndicatorBuilder: (cellSize) => SizedBox(
         width: cellSize,
         height: cellSize,
         child: Center(
@@ -125,7 +130,7 @@ SimpleChessBoard(
                 height: cellSize * 0.3,
                 decoration: BoxDecoration(
                     shape: BoxShape.circle,
-                    color: Colors.blue.withOpacity(0.7),
+                    color: Colors.blue.withValues(alpha: 0.7),
                 ),
             ),
         ),
@@ -162,44 +167,52 @@ As an example:
 SimpleChessBoard(
     engineThinking: false,
     fen: '1k6/p2KP3/1p6/8/4B3/8/8/8 w - - 0 1',
-    onMove: ({required ShortMove move}){
-        print('${move.from}|${move.to}|${move.promotion}')
+    onMove: ({required ShortMove move}) {
+        debugPrint('${move.from}|${move.to}|${move.promotion}');
     },
-    orientation: BoardColor.white,
+    blackSideAtBottom: false,
     whitePlayerType: PlayerType.human,
     blackPlayerType: PlayerType.computer,
-    lastMoveToHighlight: BoardArrow(from: 'e2', to: 'e4', color: Colors.blueAccent),
-        onPromote: () {
-            return showDialog<PieceType>(
-            context: context,
-            builder: (_) {
-                return AlertDialog(
-                title: Text('Promotion'),
-                content: Column(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                            ListTile(
-                                title: Text("Queen"),
-                                onTap: () => navigator.pop(PieceType.queen),
-                            ),
-                            ListTile(
-                                title: Text("Rook"),
-                                onTap: () => navigator.pop(PieceType.rook),
-                            ),
-                            ListTile(
-                                title: Text("Bishop"),
-                                onTap: () => navigator.pop(PieceType.bishop),
-                            ),
-                            ListTile(
-                                title: Text("Knight"),
-                                onTap: () => navigator.pop(PieceType.knight),
-                            ),
-                        ],
-                    ),
-                );
-            },
+    lastMoveToHighlight: null,
+    onPromote: () {
+        return showDialog<PieceType>(
+        context: context,
+        builder: (_) {
+            return AlertDialog(
+            title: Text('Promotion'),
+            content: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                ListTile(
+                    title: Text("Queen"),
+                    onTap: () =>
+                        Navigator.of(context).pop(PieceType.queen),
+                ),
+                ListTile(
+                    title: Text("Rook"),
+                    onTap: () =>
+                        Navigator.of(context).pop(PieceType.rook),
+                ),
+                ListTile(
+                    title: Text("Bishop"),
+                    onTap: () =>
+                        Navigator.of(context).pop(PieceType.bishop),
+                ),
+                ListTile(
+                    title: Text("Knight"),
+                    onTap: () =>
+                        Navigator.of(context).pop(PieceType.knight),
+                ),
+                ],
+            ),
+            );
+        },
         );
     },
+    onPromotionCommited: ({required moveDone, required pieceType}) {
+        // update the board logic with the given pieceType and moveData inside moveDone.
+    },
+    // Other parameters ...
 )
 ```
 
@@ -211,12 +224,14 @@ SimpleChessBoard(
 - blackPlayerType : if it is black turn and this is set to `PlayerType.human`, then the user will be able to move pieces. Either with the click method, or with the drag and drop method. Otherwise, if set to `PlayerType.computer` and it is black turn, then the user won't be able to move pieces.
 - onMove : the given function will be called whenever a move is done on board by the user (if he's allowed to move pieces). It has a single `required` parameter `ShortMove move` which carries data about from/to cells, as well as promotion type which is nullable. **Notice that it's up to you to update the board or not based on the move you receive from this function.** You can use the [chess](https://pub.dev/packages/chess) package to get the new position.
 - onPromote: the given function is called whenever a promotion move is done on board by the user (if he's allowed to move pieces). You must return a `Future<PieceType?>`. The `Future` can wrap a `null` value in order to cancel. Otherwise, wrap a `PieceType` such as `PieceType.queen`.
+- onPromotionCommited : you should update the board logic here, as you get data about the move made and the selected promotion. The simplest way is to first change the promotion type of the given move data, and then try to update the board logic. (See example application code.)
 - showCoordinatesZone (optionnal) : says if you want to show coordinates and player turn around the board. Give `true` for showing it, or `false` for removing it.
-- lastMoveToHighlight (optionnal) : give data about the arrow to draw on the board, if any. You pass a `BoardArrow` with from/to cells `String` and color `Color` (such as `BoardArrow(from: 'e2', to: 'e4', color: Colors.blueAccent)`) if you want to draw an arrow, or `null` if you don't want any arrow on the board.
+- lastMoveToHighlight (optionnal) : give data about the arrow to draw on the board, if any. You pass a `BoardArrow` with from/to cells `String` (such as `BoardArrow(from: 'e2', to: 'e4')`) if you want to draw an arrow, or `null` if you don't want any arrow on the board. Given that colors can be customized in the `ChessBoardColors` instance you give to the board.
 - showPossibleMoves (optional) : enable interactive tap-to-move functionality with visual move indicators. Set to `true` to show possible moves when a piece is selected.
 - normalMoveIndicatorBuilder (optional) : custom widget builder for normal move indicators (moves to empty squares). Receives the cell size as parameter and should return a widget.
 - captureMoveIndicatorBuilder (optional) : custom widget builder for capture move indicators (moves to squares with opponent pieces). Receives the cell size as parameter and should return a widget.
 - engineThinking (optionnal) : says if you want to show a `CircularProgressBar` in order to indicate that an engine is trying to compute next move for example.
+- boardColors : you pass a `ChessBoardColors` in which colors can be customized. See example project code.
 
 ## Project's repository
 

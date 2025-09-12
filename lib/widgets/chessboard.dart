@@ -88,6 +88,10 @@ class SimpleChessBoard extends StatelessWidget {
   /// Handler for when user tries to make move on board.
   final void Function({required ShortMove move}) onMove;
 
+  /// Handler for when a move is successfully made (for history tracking)
+  final void Function({required ShortMove move, required String newFen})?
+      onMoveComplete;
+
   /// Handler for when user wants to make a promotion on board.
   final Future<PieceType?> Function() onPromote;
 
@@ -113,6 +117,18 @@ class SimpleChessBoard extends StatelessWidget {
 
   /// Should possible moves be shown as dots when dragging a piece?
   final bool? showPossibleMoves;
+
+  /// Whether the board is interactive (allows moves)
+  final bool isInteractive;
+
+  /// Text to show when board is not interactive
+  final String nonInteractiveText;
+
+  /// Style for the non-interactive overlay text
+  final TextStyle? nonInteractiveTextStyle;
+
+  /// Background color for the non-interactive overlay
+  final Color? nonInteractiveOverlayColor;
 
   /// Custom widget builder for normal move indicators (empty squares)
   final Widget Function(double cellSize)? normalMoveIndicatorBuilder;
@@ -144,6 +160,7 @@ class SimpleChessBoard extends StatelessWidget {
     required this.whitePlayerType,
     required this.blackPlayerType,
     required this.onMove,
+    this.onMoveComplete,
     required this.onPromote,
     required this.onPromotionCommited,
     required this.onTap,
@@ -154,6 +171,10 @@ class SimpleChessBoard extends StatelessWidget {
     this.lastMoveToHighlight,
     this.highlightLastMoveSquares = false,
     this.showPossibleMoves,
+    this.isInteractive = true,
+    this.nonInteractiveText = 'VIEWING HISTORY',
+    this.nonInteractiveTextStyle,
+    this.nonInteractiveOverlayColor,
     this.normalMoveIndicatorBuilder,
     this.captureMoveIndicatorBuilder,
   });
@@ -233,6 +254,10 @@ class SimpleChessBoard extends StatelessWidget {
               onTap: onTap,
               highlightLastMoveSquares: highlightLastMoveSquares,
               showPossibleMoves: showPossibleMoves ?? false,
+              isInteractive: isInteractive,
+              nonInteractiveText: nonInteractiveText,
+              nonInteractiveTextStyle: nonInteractiveTextStyle,
+              nonInteractiveOverlayColor: nonInteractiveOverlayColor,
               normalMoveIndicatorBuilder: normalMoveIndicatorBuilder,
               captureMoveIndicatorBuilder: captureMoveIndicatorBuilder,
               arrow: (lastMoveToHighlight != null)
@@ -363,6 +388,10 @@ class _Chessboard extends StatefulWidget {
   final Map<String, Color> cellHighlights;
   final bool highlightLastMoveSquares;
   final bool showPossibleMoves;
+  final bool isInteractive;
+  final String nonInteractiveText;
+  final TextStyle? nonInteractiveTextStyle;
+  final Color? nonInteractiveOverlayColor;
   final Widget Function(double cellSize)? normalMoveIndicatorBuilder;
   final Widget Function(double cellSize)? captureMoveIndicatorBuilder;
   final void Function(ShortMove move) processMove;
@@ -387,6 +416,10 @@ class _Chessboard extends StatefulWidget {
     required this.cellHighlights,
     required this.highlightLastMoveSquares,
     required this.showPossibleMoves,
+    required this.isInteractive,
+    required this.nonInteractiveText,
+    this.nonInteractiveTextStyle,
+    this.nonInteractiveOverlayColor,
     required this.normalMoveIndicatorBuilder,
     required this.captureMoveIndicatorBuilder,
     required this.onPromote,
@@ -424,7 +457,7 @@ class _ChessboardState extends State<_Chessboard> {
   }
 
   void _handlePanStart(DragStartDetails details) {
-    if (!_isHumanTurn()) return;
+    if (!_isHumanTurn() || !widget.isInteractive) return;
     if (_tapStart != null) return;
     final position = details.localPosition;
     final cellsSize = widget.size / 8;
@@ -551,7 +584,7 @@ class _ChessboardState extends State<_Chessboard> {
         "${String.fromCharCode('1'.codeUnitAt(0) + rank)}";
 
     // Handle possible moves display on tap
-    if (widget.showPossibleMoves && _isHumanTurn()) {
+    if (widget.showPossibleMoves && _isHumanTurn() && widget.isInteractive) {
       // Check if tapping on a possible move square (to make a move) FIRST
       if (_possibleMoves.contains(cellCoordinate) && _tapStart != null) {
         // Make the move
@@ -641,7 +674,7 @@ class _ChessboardState extends State<_Chessboard> {
 
   @override
   Widget build(BuildContext context) {
-    return GestureDetector(
+    final boardWidget = GestureDetector(
       onTapUp: _handleTap,
       onPanStart: _handlePanStart,
       onPanUpdate: _handlePanUpdate,
@@ -671,6 +704,53 @@ class _ChessboardState extends State<_Chessboard> {
         ],
       ),
     );
+
+    // If not interactive, wrap with visual feedback
+    if (!widget.isInteractive) {
+      final overlayColor = widget.nonInteractiveOverlayColor ?? Colors.orange;
+      final textStyle = widget.nonInteractiveTextStyle ??
+          const TextStyle(
+            color: Colors.white,
+            fontWeight: FontWeight.bold,
+            fontSize: 12,
+          );
+
+      return Stack(
+        children: [
+          Opacity(
+            opacity: 0.6,
+            child: boardWidget,
+          ),
+          Positioned.fill(
+            child: Container(
+              decoration: BoxDecoration(
+                border: Border.all(
+                  color: overlayColor,
+                  width: 3,
+                ),
+                borderRadius: BorderRadius.circular(4),
+              ),
+              child: Center(
+                child: Container(
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                  decoration: BoxDecoration(
+                    color: overlayColor,
+                    borderRadius: BorderRadius.circular(4),
+                  ),
+                  child: Text(
+                    widget.nonInteractiveText,
+                    style: textStyle,
+                  ),
+                ),
+              ),
+            ),
+          ),
+        ],
+      );
+    }
+
+    return boardWidget;
   }
 
   List<Widget> _buildPossibleMoveIndicators() {

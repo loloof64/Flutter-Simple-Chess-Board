@@ -6,7 +6,7 @@ enum PieceType {
   queen,
   king;
 
-  get name {
+  String get name {
     return switch (this) {
       PieceType.pawn => 'p',
       PieceType.knight => 'n',

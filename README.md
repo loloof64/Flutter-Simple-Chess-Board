@@ -29,6 +29,7 @@ A simple chess board, where:
 - the common size will be the least of attributed width/height : if width > height => takes the allocated height, and the reverse if width < height (so for example, if you use it in a Row/Column, you can set the stretch alignment in the cross axis direction for a quite good layout/effect),
 - you can highlights some square, from the color you want,
 - you can enable interactive tap-to-move functionality with visual move indicators,
+- you can move into history with optional controls,
 - you can customize move indicator widgets for both normal moves and capture moves.
 
 If you want to implement game logic, you can use the [chess](https://pub.dev/packages/chess) package.
@@ -207,7 +208,7 @@ class _ChessBoardWithHistoryState extends State<ChessBoardWithHistory> {
           nonInteractiveOverlayColor: Colors.deepPurple,
           // ... other required parameters
         ),
-        
+
         // Navigation controls
         MoveNavigationControls(
           moveHistory: _moveHistory,

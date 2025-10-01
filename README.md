@@ -29,7 +29,9 @@ A simple chess board, where:
 - the common size will be the least of attributed width/height : if width > height => takes the allocated height, and the reverse if width < height (so for example, if you use it in a Row/Column, you can set the stretch alignment in the cross axis direction for a quite good layout/effect),
 - you can highlights some square, from the color you want,
 - you can enable interactive tap-to-move functionality with visual move indicators,
-- you can customize move indicator widgets for both normal moves and capture moves.
+- you can customize move indicator widgets for both normal moves and capture moves,
+- you can enable sound effects when moves are made (for both human and computer moves),
+- you can track captured pieces for both players and get them as callbacks.
 
 If you want to implement game logic, you can use the [chess](https://pub.dev/packages/chess) package.
 
@@ -65,6 +67,15 @@ SimpleChessBoard(
     chessBoardColors: ChessBoardColors()
     ..lastMoveArrowColor = Colors.redAccent,
     showPossibleMoves: false,
+    playSounds: true, // Enable sound effects for all moves
+    onCapturedPiecesChanged: ({
+        required whiteCapturedPieces,
+        required blackCapturedPieces,
+    }) {
+        // Track captured pieces - whiteCapturedPieces contains pieces captured by white
+        debugPrint('White captured: $whiteCapturedPieces');
+        debugPrint('Black captured: $blackCapturedPieces');
+    },
 )
 ```
 
@@ -231,6 +242,63 @@ class _ChessBoardWithHistoryState extends State<ChessBoardWithHistory> {
 }
 ```
 
+### Tracking captured pieces
+
+You can track captured pieces by providing an `onCapturedPiecesChanged` callback. This callback is invoked whenever the board position changes, providing lists of captured pieces for both players:
+
+```dart
+class MyChessBoard extends StatefulWidget {
+  @override
+  State<MyChessBoard> createState() => _MyChessBoardState();
+}
+
+class _MyChessBoardState extends State<MyChessBoard> {
+  String fen = chess.Chess.DEFAULT_POSITION;
+  List<PieceType> whiteCapturedPieces = [];
+  List<PieceType> blackCapturedPieces = [];
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      children: [
+        // Display white's captured pieces (black pieces)
+        Text('White captured: ${whiteCapturedPieces.length} pieces'),
+        
+        SimpleChessBoard(
+          fen: fen,
+          whitePlayerType: PlayerType.human,
+          blackPlayerType: PlayerType.human,
+          onMove: ({required move}) {
+            // Handle move
+          },
+          onCapturedPiecesChanged: ({
+            required whiteCapturedPieces,
+            required blackCapturedPieces,
+          }) {
+            setState(() {
+              this.whiteCapturedPieces = whiteCapturedPieces;
+              this.blackCapturedPieces = blackCapturedPieces;
+            });
+          },
+          // ... other required parameters
+        ),
+        
+        // Display black's captured pieces (white pieces)
+        Text('Black captured: ${blackCapturedPieces.length} pieces'),
+      ],
+    );
+  }
+}
+```
+
+The captured pieces are returned as lists of `PieceType` enum values, where:
+- `whiteCapturedPieces`: Black pieces that have been captured by white
+- `blackCapturedPieces`: White pieces that have been captured by black
+
+Each `PieceType` can be: `pawn`, `knight`, `bishop`, `rook`, `queen`, or `king`.
+
+For a complete example with UI rendering of captured pieces, see `example/lib/variants/captured_pieces_example.dart`.
+
 ### Handling promotion
 
 You handle promotion in the function you give to the mandatory `onPromote` parameter. In this function you return the `PieceType` you want to use.
@@ -310,6 +378,8 @@ SimpleChessBoard(
 - nonInteractiveTextStyle (optional) : text style for the non-interactive overlay text.
 - nonInteractiveOverlayColor (optional) : color for the non-interactive overlay border and background. Default: `Colors.orange`.
 - engineThinking (optionnal) : says if you want to show a `CircularProgressBar` in order to indicate that an engine is trying to compute next move for example.
+- playSounds (optional) : whether to play sound effects when moves are made. When `true`, plays the castle.mp3 sound effect for each move (both human and computer moves). Default: `false`.
+- onCapturedPiecesChanged (optional) : callback function that is triggered whenever the board position changes. Receives two parameters: `whiteCapturedPieces` (list of `PieceType` representing black pieces captured by white) and `blackCapturedPieces` (list of `PieceType` representing white pieces captured by black). Use this to track and display captured pieces in your UI.
 - boardColors : you pass a `ChessBoardColors` in which colors can be customized. See example project code.
 
 ## Project's repository
@@ -321,3 +391,12 @@ You can find the repository on [Github](https://github.com/loloof64/Flutter-Simp
 - Using code from [Flutter Chess board](https://github.com/varunpvp/flutter_chessboard).
 - Using code from [Flutter Stateless Chess board](https://github.com/varunpvp/flutter_chessboard).
 - Using chess pieces definitions from [Wikimedia Commons](https://commons.wikimedia.org/wiki/Category:SVG_chess_pieces).
+
+
+## Contributors
+
+<p align="center">
+  <a href="https://github.com/berkaycatak">
+    <img src="https://avatars.githubusercontent.com/u/34205493?v=4" width="80" style="border-radius:50%; margin: 10px;" />
+  </a>
+</p>

@@ -1,9 +1,9 @@
 library;
 
 import 'dart:math';
-
 import 'package:flutter/material.dart';
 import 'package:chess/chess.dart' as chess;
+import 'package:just_audio/just_audio.dart';
 import 'package:simple_chess_board/models/piece.dart';
 import 'package:simple_chess_board/utils.dart';
 import 'package:simple_chess_board/widgets/chess_vectors_definitions.dart';
@@ -139,8 +139,19 @@ class SimpleChessBoard extends StatelessWidget {
   /// Must a circular progress bar be visible above of the board ?
   final bool engineThinking;
 
+  /// Whether to play sound effects when moves are made
+  final bool playSounds;
+
   /// The cell highlighting colors.
   final Map<String, Color> cellHighlights;
+
+  /// Callback for captured pieces information.
+  /// Called whenever the board position changes.
+  /// Returns lists of piece types captured by each player.
+  final void Function({
+    required List<PieceType> whiteCapturedPieces,
+    required List<PieceType> blackCapturedPieces,
+  })? onCapturedPiecesChanged;
 
   /// Says if the player in turn is human.
   bool currentPlayerIsHuman() {
@@ -177,6 +188,8 @@ class SimpleChessBoard extends StatelessWidget {
     this.nonInteractiveOverlayColor,
     this.normalMoveIndicatorBuilder,
     this.captureMoveIndicatorBuilder,
+    this.playSounds = false,
+    this.onCapturedPiecesChanged,
   });
 
   void _processMove(ShortMove move) {
@@ -267,6 +280,8 @@ class SimpleChessBoard extends StatelessWidget {
                     )
                   : null,
               cellHighlights: cellHighlights,
+              onCapturedPiecesChanged: onCapturedPiecesChanged,
+              playSounds: playSounds,
             ),
             if (engineThinking)
               SizedBox(
@@ -403,6 +418,11 @@ class _Chessboard extends StatefulWidget {
   final void Function({
     required String cellCoordinate,
   }) onTap;
+  final void Function({
+    required List<PieceType> whiteCapturedPieces,
+    required List<PieceType> blackCapturedPieces,
+  })? onCapturedPiecesChanged;
+  final bool playSounds;
 
   const _Chessboard({
     required this.fen,
@@ -425,6 +445,8 @@ class _Chessboard extends StatefulWidget {
     required this.onPromote,
     required this.onPromotionCommited,
     required this.onTap,
+    this.onCapturedPiecesChanged,
+    required this.playSounds,
   });
 
   @override
@@ -441,6 +463,7 @@ class _ChessboardState extends State<_Chessboard> {
   void initState() {
     _squares = getSquares(widget.fen);
     super.initState();
+    _calculateCapturedPieces();
   }
 
   @override
@@ -452,8 +475,112 @@ class _ChessboardState extends State<_Chessboard> {
       if (oldWidget.fen != widget.fen) {
         _possibleMoves = [];
         _tapStart = null;
+        _calculateCapturedPieces();
+        // Play sound for both human and computer moves
+        if (widget.playSounds) {
+          _playMoveSound();
+        }
       }
     });
+  }
+
+  Future<void> _playMoveSound() async {
+    final AudioPlayer player = AudioPlayer();
+    try {
+      // Load and play local asset
+      await player.setAsset('packages/simple_chess_board/sounds/castle.mp3');
+      player.setVolume(1.0);
+      await player.play();
+    } catch (e) {
+      debugPrint('Sound error: $e');
+    } finally {
+      player.dispose();
+    }
+  }
+
+  void _calculateCapturedPieces() {
+    if (widget.onCapturedPiecesChanged == null) return;
+
+    // Initial piece counts at starting position
+    final initialPieces = {
+      BoardColor.white: {
+        PieceType.pawn: 8,
+        PieceType.knight: 2,
+        PieceType.bishop: 2,
+        PieceType.rook: 2,
+        PieceType.queen: 1,
+        PieceType.king: 1,
+      },
+      BoardColor.black: {
+        PieceType.pawn: 8,
+        PieceType.knight: 2,
+        PieceType.bishop: 2,
+        PieceType.rook: 2,
+        PieceType.queen: 1,
+        PieceType.king: 1,
+      },
+    };
+
+    // Count pieces currently on the board
+    final currentPieces = {
+      BoardColor.white: <PieceType, int>{
+        PieceType.pawn: 0,
+        PieceType.knight: 0,
+        PieceType.bishop: 0,
+        PieceType.rook: 0,
+        PieceType.queen: 0,
+        PieceType.king: 0,
+      },
+      BoardColor.black: <PieceType, int>{
+        PieceType.pawn: 0,
+        PieceType.knight: 0,
+        PieceType.bishop: 0,
+        PieceType.rook: 0,
+        PieceType.queen: 0,
+        PieceType.king: 0,
+      },
+    };
+
+    for (final piece in _squares.values) {
+      if (piece != null) {
+        currentPieces[piece.color]![piece.type] =
+            (currentPieces[piece.color]![piece.type] ?? 0) + 1;
+      }
+    }
+
+    // Calculate captured pieces
+    final whiteCapturedPieces = <PieceType>[];
+    final blackCapturedPieces = <PieceType>[];
+
+    // Black pieces captured by white
+    for (final entry in initialPieces[BoardColor.black]!.entries) {
+      final pieceType = entry.key;
+      final initialCount = entry.value;
+      final currentCount = currentPieces[BoardColor.black]![pieceType] ?? 0;
+      final captured = initialCount - currentCount;
+
+      for (int i = 0; i < captured; i++) {
+        whiteCapturedPieces.add(pieceType);
+      }
+    }
+
+    // White pieces captured by black
+    for (final entry in initialPieces[BoardColor.white]!.entries) {
+      final pieceType = entry.key;
+      final initialCount = entry.value;
+      final currentCount = currentPieces[BoardColor.white]![pieceType] ?? 0;
+      final captured = initialCount - currentCount;
+
+      for (int i = 0; i < captured; i++) {
+        blackCapturedPieces.add(pieceType);
+      }
+    }
+
+    // Invoke callback
+    widget.onCapturedPiecesChanged!(
+      whiteCapturedPieces: whiteCapturedPieces,
+      blackCapturedPieces: blackCapturedPieces,
+    );
   }
 
   void _handlePanStart(DragStartDetails details) {

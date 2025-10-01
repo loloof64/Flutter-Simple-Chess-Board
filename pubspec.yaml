@@ -10,8 +10,7 @@ environment:
 dependencies:
   flutter:
     sdk: flutter
-  chess: ^0.8.1
-  just_audio: ^0.9.40
+  chess: ^0.8.0
 
 dev_dependencies:
   flutter_test:
@@ -25,8 +24,8 @@ dev_dependencies:
 flutter:
 
   # To add assets to your package, add an assets section, like this:
-  assets:
-    - sounds/
+  # assets:
+  #   - assets/chess_vectors/
   #   - images/a_dot_ham.jpeg
   #
   # For details regarding assets in packages, see

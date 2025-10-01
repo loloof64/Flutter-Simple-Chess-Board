@@ -116,6 +116,7 @@ class MoveNavigationControls extends StatelessWidget {
         ? CupertinoButton(
             onPressed: onPressed,
             padding: const EdgeInsets.all(8),
+            minSize: 0,
             child: Icon(
               icon,
               color: color,

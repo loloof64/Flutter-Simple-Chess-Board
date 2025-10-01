@@ -1,3 +1,9 @@
+## 1.9.0
+
+- Add optional history controls with visual feedback (thank you berkaycatak)
+- Fix interaction example (thank you berkaycatak)
+- Add history example
+
 ## 1.8.0
 
 - Add interactive possible moves visualization and optional last move square highlighting (thank you berkaycatak)

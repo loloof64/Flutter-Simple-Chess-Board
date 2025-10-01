@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:simple_chess_board_usage/chess_board_with_history.dart';
 import 'package:simple_chess_board_usage/variants/custom_move_indicator.dart';
 import 'package:simple_chess_board_usage/variants/handling_promotions.dart';
 import 'package:simple_chess_board_usage/variants/interactive.dart';
@@ -53,6 +54,12 @@ class MyHomePage extends StatelessWidget {
     }));
   }
 
+  Future<void> _goToHistoryExample(BuildContext context) async {
+    await Navigator.of(context).push(MaterialPageRoute(builder: (context) {
+      return ChessBoardWithHistory();
+    }));
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -81,7 +88,11 @@ class MyHomePage extends StatelessWidget {
             ElevatedButton(
               onPressed: () => _goToPromotionHandling(context),
               child: Text("See nicer promotion handling"),
-            )
+            ),
+            ElevatedButton(
+              onPressed: () => _goToHistoryExample(context),
+              child: Text("See history example"),
+            ),
           ],
         ),
       ),

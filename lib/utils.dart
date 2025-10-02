@@ -24,3 +24,8 @@ bool isPromoting(String fen, ShortMove move) {
       .map((it) => it["to"])
       .contains(move.to);
 }
+
+enum SoundType {
+  move,
+  capture,
+}

@@ -459,43 +459,90 @@ class _ChessboardState extends State<_Chessboard> {
   Map<String, Piece?> _squares = <String, Piece?>{};
   List<String> _possibleMoves = [];
 
+  // Audio players for each sound type
+  final Map<SoundType, AudioPlayer> _audioPlayers = {};
+
   @override
   void initState() {
     _squares = getSquares(widget.fen);
     super.initState();
     _calculateCapturedPieces();
+    _initAudioPlayers();
+  }
+
+  Future<void> _initAudioPlayers() async {
+    // Initialize audio players for each sound type
+    try {
+      _audioPlayers[SoundType.move] = AudioPlayer();
+      _audioPlayers[SoundType.capture] = AudioPlayer();
+
+      // Pre-load sounds
+      await _audioPlayers[SoundType.move]!
+          .setAsset('packages/simple_chess_board/sounds/move-self.mp3');
+      await _audioPlayers[SoundType.capture]!
+          .setAsset('packages/simple_chess_board/sounds/capture.mp3');
+    } catch (e) {
+      debugPrint('Sound initialization error: $e');
+    }
   }
 
   @override
   void didUpdateWidget(_Chessboard oldWidget) {
     super.didUpdateWidget(oldWidget);
     setState(() {
-      _squares = getSquares(widget.fen);
       // Only clear possible moves if the FEN actually changed (indicating a move was made)
       if (oldWidget.fen != widget.fen) {
+        final newSquares = getSquares(widget.fen);
+
+        // Determine if it was a capture by checking if a piece disappeared
+        final isCapture = _detectCapture(_squares, newSquares);
+
+        _squares = newSquares;
         _possibleMoves = [];
         _tapStart = null;
         _calculateCapturedPieces();
+
         // Play sound for both human and computer moves
         if (widget.playSounds) {
-          _playMoveSound();
+          _playSound(isCapture ? SoundType.capture : SoundType.move);
         }
+      } else {
+        _squares = getSquares(widget.fen);
       }
     });
   }
 
-  Future<void> _playMoveSound() async {
-    final AudioPlayer player = AudioPlayer();
+  bool _detectCapture(
+      Map<String, Piece?> oldSquares, Map<String, Piece?> newSquares) {
+    // Count pieces in both positions
+    int oldPieceCount =
+        oldSquares.values.where((piece) => piece != null).length;
+    int newPieceCount =
+        newSquares.values.where((piece) => piece != null).length;
+
+    // If piece count decreased, it was a capture
+    return newPieceCount < oldPieceCount;
+  }
+
+  Future<void> _playSound(SoundType soundType) async {
     try {
-      // Load and play local asset
-      await player.setAsset('packages/simple_chess_board/sounds/castle.mp3');
-      player.setVolume(1.0);
-      await player.play();
+      final player = _audioPlayers[soundType];
+      if (player != null) {
+        await player.seek(Duration.zero);
+        await player.play();
+      }
     } catch (e) {
       debugPrint('Sound error: $e');
-    } finally {
+    }
+  }
+
+  @override
+  void dispose() {
+    // Dispose all audio players
+    for (final player in _audioPlayers.values) {
       player.dispose();
     }
+    super.dispose();
   }
 
   void _calculateCapturedPieces() {

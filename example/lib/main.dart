@@ -4,6 +4,7 @@ import 'package:simple_chess_board_usage/variants/custom_move_indicator.dart';
 import 'package:simple_chess_board_usage/variants/handling_promotions.dart';
 import 'package:simple_chess_board_usage/variants/interactive.dart';
 import 'package:simple_chess_board_usage/variants/simple.dart';
+import 'package:simple_chess_board_usage/variants/with_sounds.dart';
 
 void main() {
   runApp(const MyApp());
@@ -60,6 +61,12 @@ class MyHomePage extends StatelessWidget {
     }));
   }
 
+  Future<void> _goToSoundExample(BuildContext context) async {
+    await Navigator.of(context).push(MaterialPageRoute(builder: (context) {
+      return BoardWithSound();
+    }));
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -92,6 +99,10 @@ class MyHomePage extends StatelessWidget {
             ElevatedButton(
               onPressed: () => _goToHistoryExample(context),
               child: Text("See history example"),
+            ),
+            ElevatedButton(
+              onPressed: () => _goToSoundExample(context),
+              child: Text("See sound example"),
             ),
           ],
         ),

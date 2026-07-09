@@ -41,7 +41,7 @@ class ChessBoardColors {
   Color coordinatesZoneColor = Colors.indigo.shade300;
 
   /// The color of last move arrow.
-  Color lastMoveArrowColor = Colors.greenAccent;
+  Color lastMoveArrowColor = Colors.amber;
 
   /// The color of the circular progress bar.
   Color circularProgressBarColor = Colors.teal;
@@ -112,6 +112,9 @@ class SimpleChessBoard extends StatelessWidget {
   /// Last move arrow.
   final BoardArrow? lastMoveToHighlight;
 
+  /// Arrows to draw (excepting last move arrow).
+  final List<BoardArrow> highlightingArrows;
+
   /// Should the start and end squares be highlighted when showing last move arrow?
   final bool highlightLastMoveSquares;
 
@@ -177,6 +180,7 @@ class SimpleChessBoard extends StatelessWidget {
     required this.onTap,
     required this.chessBoardColors,
     required this.cellHighlights,
+    this.highlightingArrows = const [],
     this.engineThinking = false,
     this.showCoordinatesZone = true,
     this.lastMoveToHighlight,
@@ -277,8 +281,10 @@ class SimpleChessBoard extends StatelessWidget {
                   ? BoardArrow(
                       from: lastMoveToHighlight!.from,
                       to: lastMoveToHighlight!.to,
+                      color: chessBoardColors.lastMoveArrowColor,
                     )
                   : null,
+              highlightingArrows: highlightingArrows,
               cellHighlights: cellHighlights,
               onCapturedPiecesChanged: onCapturedPiecesChanged,
               playSounds: playSounds,
@@ -400,6 +406,7 @@ class _Chessboard extends StatefulWidget {
   final bool blackSideAtBottom;
   final String fen;
   final BoardArrow? arrow;
+  final List<BoardArrow> highlightingArrows;
   final Map<String, Color> cellHighlights;
   final bool highlightLastMoveSquares;
   final bool showPossibleMoves;
@@ -433,6 +440,7 @@ class _Chessboard extends StatefulWidget {
     required this.blackSideAtBottom,
     required this.processMove,
     required this.arrow,
+    required this.highlightingArrows,
     required this.cellHighlights,
     required this.highlightLastMoveSquares,
     required this.showPossibleMoves,
@@ -864,6 +872,7 @@ class _ChessboardState extends State<_Chessboard> {
               dragAndDropDetails: _dndDetails,
               tapStart: _tapStart,
               arrow: widget.arrow,
+              highlightingArrows: widget.highlightingArrows,
               cellHighlights: widget.cellHighlights,
               highlightLastMoveSquares: widget.highlightLastMoveSquares,
               possibleMoves: widget.showPossibleMoves ? _possibleMoves : [],
@@ -1004,6 +1013,7 @@ class _ChessBoardPainter extends CustomPainter {
   final _DragAndDropDetails? dragAndDropDetails;
   final (int, int)? tapStart;
   final BoardArrow? arrow;
+  final List<BoardArrow> highlightingArrows;
   final Map<String, Color> cellHighlights;
   final bool highlightLastMoveSquares;
   final List<String> possibleMoves;
@@ -1017,6 +1027,7 @@ class _ChessBoardPainter extends CustomPainter {
     required this.tapStart,
     required this.dragAndDropDetails,
     required this.arrow,
+    required this.highlightingArrows,
     required this.cellHighlights,
     required this.highlightLastMoveSquares,
     required this.possibleMoves,
@@ -1031,6 +1042,7 @@ class _ChessBoardPainter extends CustomPainter {
     _drawPossibleMoves(canvas, size);
     _drawPieces(canvas, size);
     _drawLastMoveArrow(canvas, size);
+    _drawHighlightingArrows(canvas, size);
     _drawMovedPiece(canvas, size);
   }
 
@@ -1106,17 +1118,15 @@ class _ChessBoardPainter extends CustomPainter {
     }
   }
 
-  void _drawLastMoveArrow(Canvas canvas, Size size) {
-    if (arrow == null) return;
-
+  void _drawArrow(BoardArrow arrowToDraw, Canvas canvas, Size size) {
     final blockSize = size.width / 8;
     final halfBlockSize = blockSize / 2;
     final arrowMultiplier = blockSize * 0.1;
 
-    final startFile = files.indexOf(arrow!.from[0]);
-    final startRank = int.parse(arrow!.from[1]) - 1;
-    final endFile = files.indexOf(arrow!.to[0]);
-    final endRank = int.parse(arrow!.to[1]) - 1;
+    final startFile = files.indexOf(arrowToDraw.from[0]);
+    final startRank = int.parse(arrowToDraw.from[1]) - 1;
+    final endFile = files.indexOf(arrowToDraw.to[0]);
+    final endRank = int.parse(arrowToDraw.to[1]) - 1;
 
     int effectiveRowStart = 0;
     int effectiveColumnStart = 0;
@@ -1147,7 +1157,7 @@ class _ChessBoardPainter extends CustomPainter {
 
     final paint = Paint()
       ..strokeWidth = halfBlockSize * 0.150
-      ..color = colors.lastMoveArrowColor;
+      ..color = arrowToDraw.color;
 
     canvas.drawLine(startOffset,
         Offset(startOffset.dx + xDist, startOffset.dy + yDist), paint);
@@ -1228,6 +1238,18 @@ class _ChessBoardPainter extends CustomPainter {
       path,
       paint..style = PaintingStyle.fill,
     );
+  }
+
+  void _drawLastMoveArrow(Canvas canvas, Size size) {
+    if (arrow == null) return;
+
+    _drawArrow(arrow!, canvas, size);
+  }
+
+  void _drawHighlightingArrows(Canvas canvas, Size size) {
+    for (final currentArrow in highlightingArrows) {
+      _drawArrow(currentArrow, canvas, size);
+    }
   }
 
   void _drawPieces(Canvas canvas, Size size) {

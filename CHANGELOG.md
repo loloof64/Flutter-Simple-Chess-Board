@@ -1,3 +1,7 @@
+## 1.10.0
+
+- We can add highlighting arrows (see simple variant example)
+
 ## 1.9.0
 
 - Add optional history controls with visual feedback (thank you berkaycatak)

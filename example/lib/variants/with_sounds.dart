@@ -23,7 +23,10 @@ class _BoardWithSoundState extends State<BoardWithSound> {
     });
     if (success) {
       setState(() {
-        _lastMoveArrowCoordinates = BoardArrow(from: move.from, to: move.to);
+        _lastMoveArrowCoordinates = BoardArrow(
+            from: move.from,
+            to: move.to,
+            color: _lastMoveArrowCoordinates?.color ?? Colors.transparent);
       });
     }
   }

@@ -1,6 +1,6 @@
 name: simple_chess_board
 description: A simple chess board widget which do not handle game state, but with several options for board orientation, adding arrows, and others.
-version: 1.8.0
+version: 1.10.0
 repository: https://github.com/loloof64/Flutter-Simple-Chess-Board
 
 environment:
@@ -23,7 +23,6 @@ dev_dependencies:
 
 # The following section is specific to Flutter.
 flutter:
-
   # To add assets to your package, add an assets section, like this:
   assets:
     - sounds/

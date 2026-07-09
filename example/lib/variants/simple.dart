@@ -23,12 +23,20 @@ class SimpleBoardVariant extends StatelessWidget {
             blackSideAtBottom: false,
             whitePlayerType: PlayerType.human,
             blackPlayerType: PlayerType.computer,
-            lastMoveToHighlight: BoardArrow(from: 'e2', to: 'e4'),
+            lastMoveToHighlight:
+                BoardArrow(from: 'e2', to: 'e4', color: Colors.amber),
+            highlightingArrows: [
+              BoardArrow(from: 'b8', to: 'c6', color: Colors.green),
+              BoardArrow(from: 'f8', to: 'h6', color: Colors.red),
+            ],
             onPromote: () async => PieceType.queen,
             onPromotionCommited: ({required moveDone, required pieceType}) =>
                 {},
             onTap: ({required cellCoordinate}) {},
-            cellHighlights: <String, Color>{},
+            cellHighlights: <String, Color>{
+              'b8': Colors.blue,
+              'f6': Colors.red,
+            },
             chessBoardColors: ChessBoardColors()
               ..lastMoveArrowColor = Colors.redAccent,
             showPossibleMoves: false,

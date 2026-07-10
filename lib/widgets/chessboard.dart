@@ -3,7 +3,7 @@ library;
 import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:chess/chess.dart' as chess;
-import 'package:just_audio/just_audio.dart';
+import 'package:flutter_soloud/flutter_soloud.dart';
 import 'package:simple_chess_board/models/piece.dart';
 import 'package:simple_chess_board/utils.dart';
 import 'package:simple_chess_board/widgets/chess_vectors_definitions.dart';
@@ -467,13 +467,17 @@ class _ChessboardState extends State<_Chessboard> {
   Map<String, Piece?> _squares = <String, Piece?>{};
   List<String> _possibleMoves = [];
 
+  bool _soundsReady = false;
+
+  final soloud = SoLoud.instance;
+
   // Audio players for each sound type
-  final Map<SoundType, AudioPlayer> _audioPlayers = {};
+  final Map<SoundType, AudioSource> _audioPlayers = {};
 
   @override
   void initState() {
-    _squares = getSquares(widget.fen);
     super.initState();
+    _squares = getSquares(widget.fen);
     _calculateCapturedPieces();
     _initAudioPlayers();
   }
@@ -481,14 +485,11 @@ class _ChessboardState extends State<_Chessboard> {
   Future<void> _initAudioPlayers() async {
     // Initialize audio players for each sound type
     try {
-      _audioPlayers[SoundType.move] = AudioPlayer();
-      _audioPlayers[SoundType.capture] = AudioPlayer();
-
-      // Pre-load sounds
-      await _audioPlayers[SoundType.move]!
-          .setAsset('packages/simple_chess_board/sounds/move-self.mp3');
-      await _audioPlayers[SoundType.capture]!
-          .setAsset('packages/simple_chess_board/sounds/capture.mp3');
+      _audioPlayers[SoundType.move] = await soloud
+          .loadAsset('packages/simple_chess_board/sounds/move-self.mp3');
+      _audioPlayers[SoundType.capture] = await soloud
+          .loadAsset('packages/simple_chess_board/sounds/capture.mp3');
+      _soundsReady = true;
     } catch (e) {
       debugPrint('Sound initialization error: $e');
     }
@@ -511,8 +512,16 @@ class _ChessboardState extends State<_Chessboard> {
         _calculateCapturedPieces();
 
         // Play sound for both human and computer moves
-        if (widget.playSounds) {
-          _playSound(isCapture ? SoundType.capture : SoundType.move);
+        if (widget.playSounds && _soundsReady) {
+          if (isCapture) {
+            if (_audioPlayers[SoundType.capture] != null) {
+              soloud.play(_audioPlayers[SoundType.capture]!);
+            }
+          } else {
+            if (_audioPlayers[SoundType.move] != null) {
+              soloud.play(_audioPlayers[SoundType.move]!);
+            }
+          }
         }
       } else {
         _squares = getSquares(widget.fen);
@@ -532,23 +541,10 @@ class _ChessboardState extends State<_Chessboard> {
     return newPieceCount < oldPieceCount;
   }
 
-  Future<void> _playSound(SoundType soundType) async {
-    try {
-      final player = _audioPlayers[soundType];
-      if (player != null) {
-        await player.seek(Duration.zero);
-        await player.play();
-      }
-    } catch (e) {
-      debugPrint('Sound error: $e');
-    }
-  }
-
   @override
   void dispose() {
-    // Dispose all audio players
-    for (final player in _audioPlayers.values) {
-      player.dispose();
+    for (final source in _audioPlayers.values) {
+      soloud.disposeSource(source);
     }
     super.dispose();
   }

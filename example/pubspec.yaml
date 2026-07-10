@@ -47,6 +47,7 @@ dependencies:
   flutter_svg: ^2.0.6
   provider: ^6.0.2
   flutter_lints: ^5.0.0
+  flutter_soloud: ^4.0.12
 
 dev_dependencies:
   flutter_test:

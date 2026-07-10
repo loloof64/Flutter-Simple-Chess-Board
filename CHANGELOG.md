@@ -1,3 +1,7 @@
+## 1.11.0
+
+- Fixed sound issue on Linux and Windows
+
 ## 1.10.0
 
 - We can add highlighting arrows (see simple variant example)

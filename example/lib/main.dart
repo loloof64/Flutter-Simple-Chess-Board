@@ -5,8 +5,13 @@ import 'package:simple_chess_board_usage/variants/handling_promotions.dart';
 import 'package:simple_chess_board_usage/variants/interactive.dart';
 import 'package:simple_chess_board_usage/variants/simple.dart';
 import 'package:simple_chess_board_usage/variants/with_sounds.dart';
+import 'package:flutter_soloud/flutter_soloud.dart';
 
-void main() {
+void main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+
+  await SoLoud.instance.init();
+
   runApp(const MyApp());
 }
 

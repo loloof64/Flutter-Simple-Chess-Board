@@ -43,6 +43,17 @@ Last but not least : there's no implementation of cpu thinking, but you can grab
 
 To use SimpleChessBoard widget, add [simple_chess_board](https://pub.dev/packages/simple_chess_board/install) as a dependency in your pubspec.yaml .
 
+## Linux users
+
+You will need alsa headers
+
+For example on Ubuntu
+
+```bash
+sudo apt update
+sudo apt install libasound2-dev
+```
+
 ## Usage
 
 You can find a longer example in the `example` folder.
@@ -218,7 +229,7 @@ class _ChessBoardWithHistoryState extends State<ChessBoardWithHistory> {
           nonInteractiveOverlayColor: Colors.deepPurple,
           // ... other required parameters
         ),
-        
+
         // Navigation controls
         MoveNavigationControls(
           moveHistory: _moveHistory,
@@ -263,7 +274,7 @@ class _MyChessBoardState extends State<MyChessBoard> {
       children: [
         // Display white's captured pieces (black pieces)
         Text('White captured: ${whiteCapturedPieces.length} pieces'),
-        
+
         SimpleChessBoard(
           fen: fen,
           whitePlayerType: PlayerType.human,
@@ -282,7 +293,7 @@ class _MyChessBoardState extends State<MyChessBoard> {
           },
           // ... other required parameters
         ),
-        
+
         // Display black's captured pieces (white pieces)
         Text('Black captured: ${blackCapturedPieces.length} pieces'),
       ],
@@ -292,6 +303,7 @@ class _MyChessBoardState extends State<MyChessBoard> {
 ```
 
 The captured pieces are returned as lists of `PieceType` enum values, where:
+
 - `whiteCapturedPieces`: Black pieces that have been captured by white
 - `blackCapturedPieces`: White pieces that have been captured by black
 
@@ -391,7 +403,6 @@ You can find the repository on [Github](https://github.com/loloof64/Flutter-Simp
 - Using code from [Flutter Chess board](https://github.com/varunpvp/flutter_chessboard).
 - Using code from [Flutter Stateless Chess board](https://github.com/varunpvp/flutter_chessboard).
 - Using chess pieces definitions from [Wikimedia Commons](https://commons.wikimedia.org/wiki/Category:SVG_chess_pieces).
-
 
 ## Contributors
 

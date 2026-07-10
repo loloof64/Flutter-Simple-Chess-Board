@@ -393,6 +393,7 @@ SimpleChessBoard(
 - engineThinking (optionnal) : says if you want to show a `CircularProgressBar` in order to indicate that an engine is trying to compute next move for example.
 - playSounds (optional) : whether to play sound effects when moves are made. When `true`, plays the castle.mp3 sound effect for each move (both human and computer moves). Default: `false`.
 - onCapturedPiecesChanged (optional) : callback function that is triggered whenever the board position changes. Receives two parameters: `whiteCapturedPieces` (list of `PieceType` representing black pieces captured by white) and `blackCapturedPieces` (list of `PieceType` representing white pieces captured by black). Use this to track and display captured pieces in your UI.
+- onBoardResized (optionnal) : callback function that is triggered whenever the board is resized. Receives the double value `cellSize`as the parameter : the common side size of a single cell.
 - boardColors : you pass a `ChessBoardColors` in which colors can be customized. See example project code.
 
 ## Project's repository

@@ -3,6 +3,7 @@ import 'package:simple_chess_board_usage/variants/chess_board_with_history.dart'
 import 'package:simple_chess_board_usage/variants/custom_move_indicator.dart';
 import 'package:simple_chess_board_usage/variants/handling_promotions.dart';
 import 'package:simple_chess_board_usage/variants/interactive.dart';
+import 'package:simple_chess_board_usage/variants/resizing_board_callback.dart';
 import 'package:simple_chess_board_usage/variants/simple.dart';
 import 'package:simple_chess_board_usage/variants/with_sounds.dart';
 import 'package:flutter_soloud/flutter_soloud.dart';
@@ -72,6 +73,12 @@ class MyHomePage extends StatelessWidget {
     }));
   }
 
+  Future<void> _goToResizeCallbackExample(BuildContext context) async {
+    await Navigator.of(context).push(MaterialPageRoute(builder: (context) {
+      return ResizingBoardCallbackVariant();
+    }));
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -109,6 +116,10 @@ class MyHomePage extends StatelessWidget {
               onPressed: () => _goToSoundExample(context),
               child: Text("See sound example"),
             ),
+            ElevatedButton(
+              onPressed: () => _goToResizeCallbackExample(context),
+              child: Text("See resizing callback example"),
+            )
           ],
         ),
       ),

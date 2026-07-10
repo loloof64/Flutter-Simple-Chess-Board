@@ -150,11 +150,17 @@ class SimpleChessBoard extends StatelessWidget {
 
   /// Callback for captured pieces information.
   /// Called whenever the board position changes.
-  /// Returns lists of piece types captured by each player.
+  /// Parameters are lists of piece types captured by each player.
   final void Function({
     required List<PieceType> whiteCapturedPieces,
     required List<PieceType> blackCapturedPieces,
   })? onCapturedPiecesChanged;
+
+  /// Callback for whenever board is resized.
+  /// Parameter is the new cell common side size (double).
+  /// Please notice that you should avoid generating a new build of the board from this callback,
+  /// otherwise you'll end up with an infinite rendering.
+  final void Function(double newCellSize)? onBoardResized;
 
   /// Says if the player in turn is human.
   bool currentPlayerIsHuman() {
@@ -194,6 +200,7 @@ class SimpleChessBoard extends StatelessWidget {
     this.captureMoveIndicatorBuilder,
     this.playSounds = false,
     this.onCapturedPiecesChanged,
+    this.onBoardResized,
   });
 
   void _processMove(ShortMove move) {
@@ -218,7 +225,12 @@ class SimpleChessBoard extends StatelessWidget {
         final size = constraints.maxWidth < constraints.maxHeight
             ? constraints.maxWidth
             : constraints.maxHeight;
-        var boardSizeProportion = (showCoordinatesZone ? 0.9 : 1.0);
+        final boardSizeProportion = (showCoordinatesZone ? 0.9 : 1.0);
+        final finalBoardSize = size * boardSizeProportion;
+        final cellSize = finalBoardSize / (showCoordinatesZone ? 9.0 : 8.0);
+
+        onBoardResized?.call(cellSize);
+
         return Stack(
           alignment: Alignment.center,
           children: [
@@ -260,7 +272,7 @@ class SimpleChessBoard extends StatelessWidget {
                 : Container(),
             _Chessboard(
               fen: fen,
-              size: size * boardSizeProportion,
+              size: finalBoardSize,
               blackSideAtBottom: blackSideAtBottom,
               boardColors: chessBoardColors,
               processMove: _processMove,
@@ -291,8 +303,8 @@ class SimpleChessBoard extends StatelessWidget {
             ),
             if (engineThinking)
               SizedBox(
-                width: size * boardSizeProportion,
-                height: size * boardSizeProportion,
+                width: finalBoardSize,
+                height: finalBoardSize,
                 child: CircularProgressIndicator(
                   backgroundColor: chessBoardColors.circularProgressBarColor,
                   strokeWidth: 8,

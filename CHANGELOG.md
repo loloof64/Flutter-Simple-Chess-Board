@@ -1,3 +1,7 @@
+## 1.12.0
+
+- We can add a callback for listening for size change : it will give us new cell size as a double parameter.
+
 ## 1.11.0
 
 - Fixed sound issue on Linux and Windows

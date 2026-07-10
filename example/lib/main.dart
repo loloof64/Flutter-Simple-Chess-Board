@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:simple_chess_board_usage/chess_board_with_history.dart';
+import 'package:simple_chess_board_usage/variants/chess_board_with_history.dart';
 import 'package:simple_chess_board_usage/variants/custom_move_indicator.dart';
 import 'package:simple_chess_board_usage/variants/handling_promotions.dart';
 import 'package:simple_chess_board_usage/variants/interactive.dart';

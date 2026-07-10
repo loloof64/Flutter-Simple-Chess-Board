@@ -97,7 +97,6 @@ class _InteractiveBoardState extends State<InteractiveBoard> {
                   ..circularProgressBarColor = Colors.red
                   ..coordinatesColor = Colors.green,
                 engineThinking: false,
-                playSounds: true,
                 fen: _chess.fen,
                 onMove: tryMakingMove,
                 blackSideAtBottom: _blackAtBottom,

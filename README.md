@@ -57,6 +57,12 @@ void main() async {
 }
 ```
 
+Also add the SoLoud plugin in your pubspecs.yaml 👍
+
+```bash
+flutter pub add flutter_soloud
+```
+
 Otherwise, sound won't work and you'll get an exception.
 
 ## Linux users

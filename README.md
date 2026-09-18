@@ -43,6 +43,22 @@ Last but not least : there's no implementation of cpu thinking, but you can grab
 
 To use SimpleChessBoard widget, add [simple_chess_board](https://pub.dev/packages/simple_chess_board/install) as a dependency in your pubspec.yaml .
 
+### Important note : intialize SoLoud.
+
+In the main method of your application, before launching app, you must initialize SoLoud. For example like this
+
+```dart
+void main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+
+  await SoLoud.instance.init();
+
+  runApp(const MyApp());
+}
+```
+
+Otherwise, sound won't work and you'll get an exception.
+
 ## Linux users
 
 You will need alsa headers
